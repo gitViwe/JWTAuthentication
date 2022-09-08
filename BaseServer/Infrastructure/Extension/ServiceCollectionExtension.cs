@@ -36,7 +36,7 @@ internal static class ServiceCollectionExtension
         return services.AddDbContext<HubDbContext>(options =>
         {
             // using an SQL provider
-            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite), b => b.MigrationsAssembly("API"));
+            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite), b => b.MigrationsAssembly("Infrastructure"));
         });
     }
 

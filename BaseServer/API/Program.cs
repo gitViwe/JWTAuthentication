@@ -1,4 +1,5 @@
 using API.Endpoint;
+using API.Extension;
 using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseHubExceptionHandler(app.Logger);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -25,5 +28,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapSuperHeroEndpoint();
+app.MapAccountEndpoint();
 
 app.Run();

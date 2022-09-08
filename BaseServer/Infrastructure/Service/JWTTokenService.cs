@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interface;
 using Application.Configuration;
 using Infrastructure.Identity;
+using Infrastructure.Persistance;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Contract.Identity;
@@ -15,10 +16,14 @@ namespace Infrastructure.Service;
 internal class JWTTokenService : IJWTTokenService
 {
     private readonly APIConfiguration _configuration;
+    private readonly HubDbContext _dbContext;
 
-    public JWTTokenService(IOptionsMonitor<APIConfiguration> optionsMonitor)
+    public JWTTokenService(
+        IOptionsMonitor<APIConfiguration> optionsMonitor,
+        HubDbContext dbContext)
     {
         _configuration = optionsMonitor.CurrentValue;
+        _dbContext = dbContext;
     }
 
     public TokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal)
@@ -51,6 +56,9 @@ internal class JWTTokenService : IJWTTokenService
             ExpiryDate = DateTime.UtcNow.AddMinutes(120),
             Token = Conversion.RandomString(35) + Guid.NewGuid()
         };
+        // save to database
+        _dbContext.RefreshTokens.Add(refreshToken);
+        _dbContext.SaveChanges();
         // return the authentication result
         return new TokenResponse()
         {

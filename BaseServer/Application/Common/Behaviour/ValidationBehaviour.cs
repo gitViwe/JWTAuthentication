@@ -1,6 +1,9 @@
-﻿namespace Application.Common.Behaviour;
+﻿using Shared.Exception;
 
-public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
+namespace Application.Common.Behaviour;
+
+internal class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -23,7 +26,7 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
                 .ToArray();
 
             if (failures.Any())
-                throw new ValidationException(failures);
+                throw new HubValidationException(failures);
         }
         return await next();
     }

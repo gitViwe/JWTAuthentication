@@ -1,22 +1,21 @@
 ﻿using Application.Common.Interface;
 using Shared.Contract.SuperHero;
 
-namespace Application.Feature.SuperHero
+namespace Application.Feature.SuperHero;
+
+public class GetSuperHeroQuery : PaginatedRequest, IRequest<PaginatedResponse<SuperHeroResponse>> { }
+
+internal class GetSuperHeroQueryHandler : IRequestHandler<GetSuperHeroQuery, PaginatedResponse<SuperHeroResponse>>
 {
-    public class GetSuperHeroQuery : PaginatedRequest, IRequest<PaginatedResponse<SuperHeroResponse>> { }
+    private readonly ISuperHeroService _heroService;
 
-    public class GetSuperHeroQueryHandler : IRequestHandler<GetSuperHeroQuery, PaginatedResponse<SuperHeroResponse>>
+    public GetSuperHeroQueryHandler(ISuperHeroService heroService)
     {
-        private readonly ISuperHeroService _heroService;
+        _heroService = heroService;
+    }
 
-        public GetSuperHeroQueryHandler(ISuperHeroService heroService)
-        {
-            _heroService = heroService;
-        }
-
-        public async Task<PaginatedResponse<SuperHeroResponse>> Handle(GetSuperHeroQuery request, CancellationToken cancellationToken)
-        {
-            return await _heroService.GetPaginatedAsync(request, cancellationToken);
-        }
+    public async Task<PaginatedResponse<SuperHeroResponse>> Handle(GetSuperHeroQuery request, CancellationToken cancellationToken)
+    {
+        return await _heroService.GetPaginatedAsync(request, cancellationToken);
     }
 }
