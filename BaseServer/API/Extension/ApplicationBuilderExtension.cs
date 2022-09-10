@@ -30,11 +30,17 @@ internal static class ApplicationBuilderExtension
                     // log error message
                     logger.LogError(handlerFeature.Error, handlerFeature.Error.Message);
 
-                    if (handlerFeature.Error is HubValidationException ex)
+                    if (handlerFeature.Error is HubValidationException validationException)
                     {
                         statusCode = (int)HttpStatusCode.BadRequest;
                         contentType = MediaTypeNames.Application.Json;
-                        response = Response.Fail(ex.ErrorMessages);
+                        response = Response.Fail(validationException.ErrorMessages);
+                    }
+                    else if (handlerFeature.Error is HubIdentityException identityException)
+                    {
+                        statusCode = (int)HttpStatusCode.Forbidden;
+                        contentType = MediaTypeNames.Application.Json;
+                        response = Response.Fail(identityException.Message);
                     }
                 }
 

@@ -3,6 +3,7 @@ using Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Shared.Constant;
 using Shared.Contract.Identity;
+using Shared.Extension;
 using Shared.Wrapper;
 using System.Security.Claims;
 
@@ -22,6 +23,40 @@ internal class HubIdentityService : IHubIdentityService
         _claimsPrincipalFactory = claimsPrincipalFactory;
         _userManager = userManager;
         _tokenService = tokenService;
+    }
+
+    public async Task<IResponse> LoginUserAsync(LoginRequest request, CancellationToken token)
+    {
+        // verify if email is registered
+        var existingUser = await _userManager.FindByEmailAsync(request.Email);
+        // no matching email
+        if (existingUser is not null)
+        {
+            // verify that the password is valid
+            if (await _userManager.CheckPasswordAsync(existingUser, request.Password))
+            {
+                // get claims principal from user
+                var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
+                // create JWT token
+                var newToken = _tokenService.GenerateToken(claimsPrincipal);
+                return Response<TokenResponse>.Success("Login successful", newToken);
+            }
+        }
+        
+        return Response.Fail("Login details invalid.");
+    }
+
+    public IResponse RefreshToken(TokenRequest request)
+    {
+        var claimsPrincipal = _tokenService.ValidateToken(request);
+
+        if (claimsPrincipal.HasExpiredClaims())
+        {
+            _tokenService.FlagAsUsedToken(claimsPrincipal.GetTokenID());
+        }
+
+        var newToken = _tokenService.GenerateToken(claimsPrincipal);
+        return Response<TokenResponse>.Success("Token refresh successful.", newToken);
     }
 
     public async Task<IResponse> RegisterAsync(RegisterRequest request, CancellationToken token)

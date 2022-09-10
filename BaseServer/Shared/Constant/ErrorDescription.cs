@@ -6,11 +6,12 @@
 public static class ErrorDescription
 {
     /// <summary>
-    /// Common validation error messages
+    /// Common error messages
     /// </summary>
-    public static class Validation
+    public static class Generic
     {
-        public const string Generic = "One or more validation failures have occurred.";
+        public const string Validation = "One or more validation failures have occurred.";
+        public const string Identity = "One or more identity failures have occurred.";
     }
 
     /// <summary>

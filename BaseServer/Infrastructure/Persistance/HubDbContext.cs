@@ -8,7 +8,7 @@ namespace Infrastructure.Persistance
     /// <summary>
     /// The entity Framework Core context class inherits from <see cref="IdentityDbContext"/>
     /// </summary>
-    internal class HubDbContext : IdentityDbContext<HubIdentityUser, HubIdentityRole, Guid>
+    internal class HubDbContext : IdentityDbContext<HubIdentityUser, HubIdentityRole, string>
     {
         /// <summary>
         /// Instantiate context using user specified provider

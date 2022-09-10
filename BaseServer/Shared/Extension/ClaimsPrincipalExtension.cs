@@ -11,31 +11,15 @@ public static class ClaimsPrincipalExtension
     /// </summary>
     public static string GetEmail(this ClaimsPrincipal claimsPrincipal)
     {
-        return claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Email)?.Value ?? string.Empty;
+        return claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
     }
 
     /// <summary>
-    /// Gets the Name value from the claims
+    /// Gets the JWT Id
     /// </summary>
-    public static string GetFirstName(this ClaimsPrincipal claimsPrincipal)
+    public static string GetTokenID(this ClaimsPrincipal claimsPrincipal)
     {
-        return claimsPrincipal.FindFirst(JwtRegisteredClaimNames.GivenName)?.Value ?? string.Empty;
-    }
-
-    /// <summary>
-    /// Gets the Surname value from the claims
-    /// </summary>
-    public static string GetLastName(this ClaimsPrincipal claimsPrincipal)
-    {
-        return claimsPrincipal.FindFirst(JwtRegisteredClaimNames.FamilyName)?.Value ?? string.Empty;
-    }
-
-    /// <summary>
-    /// Gets the MobilePhone value from the claims
-    /// </summary>
-    public static string GetPhoneNumber(this ClaimsPrincipal claimsPrincipal)
-    {
-        return claimsPrincipal.FindFirst(ClaimTypes.MobilePhone)?.Value ?? string.Empty;
+        return claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value ?? string.Empty;
     }
 
     /// <summary>
@@ -51,11 +35,11 @@ public static class ClaimsPrincipalExtension
     /// </summary>
     public static string GetUsername(this ClaimsPrincipal claimsPrincipal)
     {
-        return claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? string.Empty;
+        return claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
     }
 
     /// <summary>
-    /// Checks if the JWT claims have expired
+    /// Checks if the JWT claims have or are close to expiring
     /// </summary>
     public static bool HasExpiredClaims(this ClaimsPrincipal claimsPrincipal)
     {
@@ -63,7 +47,7 @@ public static class ClaimsPrincipalExtension
         if (long.TryParse(claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Exp)?.Value, out long expiry))
         {
             var expiryDate = Conversion.UnixTimeStampToDateTime(expiry);
-            if (expiryDate > DateTime.UtcNow)
+            if (expiryDate > DateTime.UtcNow.AddMinutes(-5))
             {
                 // token has not yet expired
                 return false;

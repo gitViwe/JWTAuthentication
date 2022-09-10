@@ -9,7 +9,7 @@ namespace Shared.Exception;
 public class HubValidationException : System.Exception
 {
     public HubValidationException()
-        : base(ErrorDescription.Validation.Generic)
+        : base(ErrorDescription.Generic.Validation)
     {
         ErrorMessages = Array.Empty<string>();
     }

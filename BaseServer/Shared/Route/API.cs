@@ -20,5 +20,6 @@ public static class API
     public static class AcccountEndpoint
     {
         public const string Register = "api/account/register";
+        public const string Login = "api/account/login";
     }
 }

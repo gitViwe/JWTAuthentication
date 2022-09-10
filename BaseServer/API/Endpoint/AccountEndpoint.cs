@@ -1,4 +1,5 @@
-﻿using Application.Feature.Identity.RegisterUser;
+﻿using Application.Feature.Identity.LoginUser;
+using Application.Feature.Identity.RegisterUser;
 using MediatR;
 using Shared.Contract.Identity;
 using Shared.Wrapper;
@@ -21,6 +22,11 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName("Register")
             .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
+
+        app.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
+            .AllowAnonymous()
+            .WithName("Login")
+            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
     }
 
     private static async Task<IResult> Register(
@@ -34,6 +40,19 @@ public static class AccountEndpoint
             Password = request.Password,
             PasswordConfirmation = request.PasswordConfirmation,
             UserName = request.UserName
+        };
+        return Results.Ok(await mediator.Send(command, token));
+    }
+
+    private static async Task<IResult> Login(
+        LoginRequest request,
+        IMediator mediator,
+        CancellationToken token = default)
+    {
+        var command = new LoginUserCommand
+        {
+            Email = request.Email,
+            Password = request.Password,
         };
         return Results.Ok(await mediator.Send(command, token));
     }
