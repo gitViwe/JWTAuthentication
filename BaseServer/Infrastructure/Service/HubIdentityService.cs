@@ -29,7 +29,7 @@ internal class HubIdentityService : IHubIdentityService
     {
         // verify if email is registered
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
-        // no matching email
+
         if (existingUser is not null)
         {
             // verify that the password is valid
@@ -46,17 +46,26 @@ internal class HubIdentityService : IHubIdentityService
         return Response.Fail("Login details invalid.");
     }
 
-    public IResponse RefreshToken(TokenRequest request)
+    public async Task<IResponse> RefreshToken(TokenRequest request, CancellationToken token)
     {
         var claimsPrincipal = _tokenService.ValidateToken(request);
 
-        if (claimsPrincipal.HasExpiredClaims())
+        // mark refresh token as used
+        _tokenService.FlagAsUsedToken(claimsPrincipal.GetTokenID());
+
+        // verify if email is registered
+        var existingUser = await _userManager.FindByIdAsync(claimsPrincipal.GetUserId());
+
+        if (existingUser is not null)
         {
-            _tokenService.FlagAsUsedToken(claimsPrincipal.GetTokenID());
+            // get claims principal from user
+            claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
+            // create JWT token
+            var newToken = _tokenService.GenerateToken(claimsPrincipal);
+            return Response<TokenResponse>.Success("Token refresh successful.", newToken);
         }
 
-        var newToken = _tokenService.GenerateToken(claimsPrincipal);
-        return Response<TokenResponse>.Success("Token refresh successful.", newToken);
+        return Response.Fail("Token refresh failed, please login again.");
     }
 
     public async Task<IResponse> RegisterAsync(RegisterRequest request, CancellationToken token)

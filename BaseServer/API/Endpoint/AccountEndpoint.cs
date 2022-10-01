@@ -1,4 +1,5 @@
 ﻿using Application.Feature.Identity.LoginUser;
+using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
 using MediatR;
 using Shared.Contract.Identity;
@@ -27,6 +28,11 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName("Login")
             .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
+
+        app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
+            .AllowAnonymous()
+            .WithName("RefreshToken")
+            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
     }
 
     private static async Task<IResult> Register(
@@ -53,6 +59,19 @@ public static class AccountEndpoint
         {
             Email = request.Email,
             Password = request.Password,
+        };
+        return Results.Ok(await mediator.Send(command, token));
+    }
+
+    private static async Task<IResult> RefreshToken(
+        TokenRequest request,
+        IMediator mediator,
+        CancellationToken token = default)
+    {
+        var command = new RefreshTokenCommand()
+        {
+            RefreshToken = request.RefreshToken,
+            Token = request.Token,
         };
         return Results.Ok(await mediator.Send(command, token));
     }
