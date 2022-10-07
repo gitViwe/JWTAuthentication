@@ -40,7 +40,7 @@ public static class Conversion
     public static string RandomString(int length)
     {
         var random = new Random();
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         return new string(Enumerable.Repeat(chars, length)
             .Select(x => x[random.Next(x.Length)]).ToArray());
     }

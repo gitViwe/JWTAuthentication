@@ -64,7 +64,11 @@ internal static class ServiceCollectionExtension
         var tokenValidationParams = new TokenValidationParameters
         {
             ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
-            ValidAudience = configuration[HubConfigurations.API.ClientUrl],
+            ValidAudiences = new string[]
+            {
+                configuration[HubConfigurations.API.ServerUrl],
+                configuration[HubConfigurations.API.ClientUrl]
+            },
             // specify the security key used for 
             IssuerSigningKey = new SymmetricSecurityKey(key),
             // validates the signature of the key

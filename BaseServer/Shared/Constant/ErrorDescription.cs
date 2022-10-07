@@ -11,7 +11,7 @@ public static class ErrorDescription
     public static class Generic
     {
         public const string Validation = "One or more validation failures have occurred.";
-        public const string Identity = "One or more identity failures have occurred.";
+        public const string Identity = "One or more security failures have occurred.";
     }
 
     /// <summary>

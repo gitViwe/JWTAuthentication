@@ -36,11 +36,11 @@ internal static class ApplicationBuilderExtension
                         contentType = MediaTypeNames.Application.Json;
                         response = Response.Fail(validationException.ErrorMessages);
                     }
-                    else if (handlerFeature.Error is HubIdentityException identityException)
+                    else if (handlerFeature.Error is HubIdentityException)
                     {
                         statusCode = (int)HttpStatusCode.Forbidden;
                         contentType = MediaTypeNames.Application.Json;
-                        response = Response.Fail(identityException.Message);
+                        response = Response.Fail(ErrorDescription.Generic.Identity);
                     }
                 }
 

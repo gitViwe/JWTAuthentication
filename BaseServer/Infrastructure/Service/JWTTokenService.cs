@@ -3,6 +3,7 @@ using Application.Configuration;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -23,17 +24,20 @@ internal class JWTTokenService : IJWTTokenService
     private readonly HubDbContext _dbContext;
     private readonly TokenValidationParameters _validationParameters;
     private readonly ILogger<JWTTokenService> _logger;
+    private readonly IHttpContextAccessor _contextAccessor;
 
     public JWTTokenService(
         IOptionsMonitor<APIConfiguration> optionsMonitor,
         HubDbContext dbContext,
         TokenValidationParameters validationParameters,
-        ILogger<JWTTokenService> logger)
+        ILogger<JWTTokenService> logger,
+        IHttpContextAccessor contextAccessor)
     {
         _configuration = optionsMonitor.CurrentValue;
         _dbContext = dbContext;
         _validationParameters = validationParameters;
         _logger = logger;
+        _contextAccessor = contextAccessor;
     }
 
     public TokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal)
@@ -45,7 +49,7 @@ internal class JWTTokenService : IJWTTokenService
 
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
-            Audience = _configuration.ClientUrl,
+            Audience = GetAudienceUrl(),
             Issuer = _configuration.ServerUrl,
             Subject = new ClaimsIdentity(GetRequiredClaims(claimsPrincipal.Claims)),
             Expires = DateTime.UtcNow.AddMinutes(10),
@@ -91,8 +95,7 @@ internal class JWTTokenService : IJWTTokenService
                 var result = securityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
                 if (result is false)
                 {
-                    _logger.LogError("Token has invalid security algorithm.");
-                    throw new HubIdentityException();
+                    throw new HubIdentityException("Token has invalid security algorithm.");
                 }
             }
 
@@ -100,38 +103,33 @@ internal class JWTTokenService : IJWTTokenService
             var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.Token == request.RefreshToken);
             if (storedToken is null)
             {
-                _logger.LogError("The token does not exist.");
-                throw new HubIdentityException();
+                throw new HubIdentityException("The token does not exist.");
             }
 
             // verify that the token is not being used
             if (storedToken.IsUsed)
             {
-                _logger.LogError("The token has already been used.");
-                throw new HubIdentityException();
+                throw new HubIdentityException("The token has already been used.");
             }
 
             // verify that the token has not been revoked
             if (storedToken.IsRevoked)
             {
-                _logger.LogError("The token has been revoked.");
-                throw new HubIdentityException();
+                throw new HubIdentityException("The token has been revoked.");
             }
 
             // verify the token ID
             var tokenID = jwtClaims?.Claims?.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Jti)?.Value;
             if (storedToken.JwtId != tokenID)
             {
-                _logger.LogError($"The token with ID: {tokenID}, is not valid.");
-                throw new HubIdentityException();
+                throw new HubIdentityException($"The token with ID: {tokenID}, is not valid.");
             }
 
             return jwtClaims;
         }
-        catch (SecurityTokenExpiredException ex)
+        catch (SecurityTokenValidationException ex)
         {
-            _logger.LogError("Token has already expired.", ex);
-            throw new HubIdentityException();
+            throw new HubIdentityException("Token validation failed.", ex);
         }
     }
 
@@ -179,5 +177,17 @@ internal class JWTTokenService : IJWTTokenService
         userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
 
         return userClaims;
+    }
+
+    private string GetAudienceUrl()
+    {
+        if (_contextAccessor.HttpContext is null)
+        {
+            throw new HubIdentityException("Invalid request host.");
+        }
+
+        string requestHost = _contextAccessor.HttpContext.Request.Host.Value;
+        string protocolScheme = _contextAccessor.HttpContext.Request.Scheme;
+        return $"{protocolScheme}{Uri.SchemeDelimiter}{requestHost}";
     }
 }
