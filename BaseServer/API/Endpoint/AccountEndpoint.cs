@@ -24,22 +24,19 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName(nameof(Register))
             .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
-            .WithTags(Shared.Route.API.AcccountEndpoint.TagName)
-            .ProducesDefaultHubResponses();
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
             .AllowAnonymous()
             .WithName(nameof(Login))
             .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
-            .WithTags(Shared.Route.API.AcccountEndpoint.TagName)
-            .ProducesDefaultHubResponses();
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
             .AllowAnonymous()
             .WithName(nameof(RefreshToken))
             .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
-            .WithTags(Shared.Route.API.AcccountEndpoint.TagName)
-            .ProducesDefaultHubResponses();
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
     }
 
     private static async Task<IResult> Register(

@@ -1,4 +1,5 @@
-﻿using Application.Feature.SuperHero;
+﻿using API.Extension;
+using Application.Feature.SuperHero;
 using MediatR;
 using Shared.Contract.SuperHero;
 using Shared.Wrapper;
@@ -17,13 +18,13 @@ public static class SuperHeroEndpoint
     /// </summary>
     internal static void MapSuperHeroEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet(Shared.Route.API.SuperHeroEndpoint.GetAll, GetAll)
-            .AllowAnonymous()
-            .WithName("GetAll")
-            .Produces<PaginatedResponse<SuperHeroResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
+        app.MapGet(Shared.Route.API.SuperHeroEndpoint.GetPaginated, GetPaginated)
+            .WithName(nameof(GetPaginated))
+            .Produces<PaginatedResponse<SuperHeroResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
+            .WithTags(Shared.Route.API.SuperHeroEndpoint.TAG_NAME);
     }
 
-    private static async Task<IResult> GetAll(
+    private static async Task<IResult> GetPaginated(
         int currentPage,
         int pageSize,
         IMediator mediator,

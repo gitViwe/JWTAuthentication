@@ -10,8 +10,9 @@ public static class API
     /// </summary>
     public static class SuperHeroEndpoint
     {
-        public const string GetAll = "api/superhero/all/{currentPage:required}&{pageSize:required}";
-        public static string GetAllPaginated(int currentPage, int pageSize) => $"api/superhero/all/{currentPage}&{pageSize}";
+        public const string TAG_NAME = "Superhero";
+        public const string GetPaginated = "api/superhero/{currentPage:required}&{pageSize:required}";
+        public static string GetPaginatedEndpoint(int currentPage, int pageSize) => $"api/superhero/{currentPage}&{pageSize}";
     }
 
     /// <summary>
@@ -19,7 +20,7 @@ public static class API
     /// </summary>
     public static class AcccountEndpoint
     {
-        public const string TagName = "Account";
+        public const string TAG_NAME = "Account";
         public const string Register = "api/account/register";
         public const string Login = "api/account/login";
         public const string RefreshToken = "api/account/refresh-token";
