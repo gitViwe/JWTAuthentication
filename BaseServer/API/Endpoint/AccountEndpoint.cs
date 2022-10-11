@@ -1,5 +1,4 @@
-﻿using API.Extension;
-using Application.Feature.Identity.LoginUser;
+﻿using Application.Feature.Identity.LoginUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
 using MediatR;
@@ -45,7 +44,7 @@ public static class AccountEndpoint
         CancellationToken token = default)
     {
         var command = new RegisterUserCommand
-        { 
+        {
             Email = request.Email,
             Password = request.Password,
             PasswordConfirmation = request.PasswordConfirmation,
