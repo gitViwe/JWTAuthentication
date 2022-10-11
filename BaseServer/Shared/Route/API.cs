@@ -19,6 +19,7 @@ public static class API
     /// </summary>
     public static class AcccountEndpoint
     {
+        public const string TagName = "Account";
         public const string Register = "api/account/register";
         public const string Login = "api/account/login";
         public const string RefreshToken = "api/account/refresh-token";

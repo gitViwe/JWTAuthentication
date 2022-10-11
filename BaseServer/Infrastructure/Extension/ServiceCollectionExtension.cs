@@ -162,4 +162,28 @@ internal static class ServiceCollectionExtension
 
         return services;
     }
+
+    internal static IServiceCollection RegisterCors(this IServiceCollection services, IConfiguration configuration)
+    {
+        // add CORS policy https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-6.0
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(
+                builder =>
+                {
+                    builder
+                        .AllowCredentials()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        // allow requests from this URL
+                        .WithOrigins(new string[]
+                        {
+                            configuration[HubConfigurations.API.ServerUrl].TrimEnd('/'),
+                            configuration[HubConfigurations.API.ClientUrl].TrimEnd('/')
+                        });
+                });
+        });
+
+        return services;
+    }
 }

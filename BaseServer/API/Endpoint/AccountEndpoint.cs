@@ -1,4 +1,5 @@
-﻿using Application.Feature.Identity.LoginUser;
+﻿using API.Extension;
+using Application.Feature.Identity.LoginUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
 using MediatR;
@@ -21,18 +22,24 @@ public static class AccountEndpoint
     {
         app.MapPost(Shared.Route.API.AcccountEndpoint.Register, Register)
             .AllowAnonymous()
-            .WithName("Register")
-            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
+            .WithName(nameof(Register))
+            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
+            .WithTags(Shared.Route.API.AcccountEndpoint.TagName)
+            .ProducesDefaultHubResponses();
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
             .AllowAnonymous()
-            .WithName("Login")
-            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
+            .WithName(nameof(Login))
+            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
+            .WithTags(Shared.Route.API.AcccountEndpoint.TagName)
+            .ProducesDefaultHubResponses();
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
             .AllowAnonymous()
-            .WithName("RefreshToken")
-            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json);
+            .WithName(nameof(RefreshToken))
+            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
+            .WithTags(Shared.Route.API.AcccountEndpoint.TagName)
+            .ProducesDefaultHubResponses();
     }
 
     private static async Task<IResult> Register(
