@@ -5,15 +5,15 @@
 /// </summary>
 public interface IResponse
 {
-    /// <summary>
-    /// The response messages
-    /// </summary>
-    IEnumerable<string> Messages { get; }
 
     /// <summary>
     /// Flags whether the process was successful
     /// </summary>
     bool Succeeded { get; }
+    /// <summary>
+    /// The response messages
+    /// </summary>
+    IEnumerable<string> Messages { get; }
 }
 
 /// <summary>

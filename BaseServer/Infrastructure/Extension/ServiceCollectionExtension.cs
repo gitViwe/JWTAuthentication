@@ -35,7 +35,7 @@ internal static class ServiceCollectionExtension
     {
         return services.AddDbContext<HubDbContext>(options =>
         {
-            // using an SQL provider
+            // using an SQlite provider
             options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite), b => b.MigrationsAssembly("Infrastructure"));
         });
     }
@@ -94,24 +94,24 @@ internal static class ServiceCollectionExtension
             // set JWT authorization events
             options.Events = new JwtBearerEvents()
             {
-                OnAuthenticationFailed = c =>
+                OnAuthenticationFailed = context =>
                 {
+                    int statusCode = (int)HttpStatusCode.InternalServerError;
+                    string contentType = MediaTypeNames.Application.Json;
+                    IResponse response = Response.Fail(ErrorDescription.Authorization.InternalServerError);
+
                     // JWT token has expired
-                    if (c.Exception is SecurityTokenExpiredException)
+                    if (context.Exception is SecurityTokenExpiredException)
                     {
-                        c.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                        c.Response.ContentType = MediaTypeNames.Application.Json;
-                        var result = JsonSerializer.Serialize(Response.Fail(ErrorDescription.Authorization.ExpiredToken));
-                        return c.Response.WriteAsync(result);
+                        statusCode = (int)HttpStatusCode.Unauthorized;
+                        contentType = MediaTypeNames.Application.Json;
+                        response = Response.Fail(ErrorDescription.Authorization.ExpiredToken);
                     }
-                    // unhandled server error
-                    else
-                    {
-                        c.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        c.Response.ContentType = MediaTypeNames.Application.Json;
-                        var result = JsonSerializer.Serialize(Response.Fail(ErrorDescription.Authorization.InternalServerError));
-                        return c.Response.WriteAsync(result);
-                    }
+
+                    context.Response.StatusCode = statusCode;
+                    context.Response.ContentType = contentType;
+                    var content = JsonSerializer.Serialize(response);
+                    return context.Response.WriteAsync(content);
                 },
                 OnChallenge = context =>
                 {

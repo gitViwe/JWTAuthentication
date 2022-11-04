@@ -27,14 +27,14 @@ public class Response : IResponse
     }
 
     /// <summary>
-    /// The response messages
-    /// </summary>
-    public IEnumerable<string> Messages { get; }
-
-    /// <summary>
     /// Flags whether the process was successful
     /// </summary>
     public bool Succeeded { get; }
+
+    /// <summary>
+    /// The response messages
+    /// </summary>
+    public IEnumerable<string> Messages { get; }
 
     /// <summary>
     /// Unsuccessful result
@@ -151,9 +151,9 @@ public class Response<TData> : IResponse<TData> where TData : class, new()
     }
 
     /// <summary>
-    /// The content returned from the request
+    /// Flags whether the process was successful
     /// </summary>
-    public TData Data { get; }
+    public bool Succeeded { get; }
 
     /// <summary>
     /// The response messages
@@ -161,9 +161,9 @@ public class Response<TData> : IResponse<TData> where TData : class, new()
     public IEnumerable<string> Messages { get; }
 
     /// <summary>
-    /// Flags whether the process was successful
+    /// The content returned from the request
     /// </summary>
-    public bool Succeeded { get; }
+    public TData Data { get; }
 
     /// <summary>
     /// Unsuccessful result

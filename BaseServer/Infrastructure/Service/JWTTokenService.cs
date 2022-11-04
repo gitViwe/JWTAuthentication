@@ -2,9 +2,7 @@
 using Application.Configuration;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
-using MediatR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Constant;
@@ -23,20 +21,17 @@ internal class JWTTokenService : IJWTTokenService
     private readonly APIConfiguration _configuration;
     private readonly HubDbContext _dbContext;
     private readonly TokenValidationParameters _validationParameters;
-    private readonly ILogger<JWTTokenService> _logger;
     private readonly IHttpContextAccessor _contextAccessor;
 
     public JWTTokenService(
         IOptionsMonitor<APIConfiguration> optionsMonitor,
         HubDbContext dbContext,
         TokenValidationParameters validationParameters,
-        ILogger<JWTTokenService> logger,
         IHttpContextAccessor contextAccessor)
     {
         _configuration = optionsMonitor.CurrentValue;
         _dbContext = dbContext;
         _validationParameters = validationParameters;
-        _logger = logger;
         _contextAccessor = contextAccessor;
     }
 
@@ -139,8 +134,7 @@ internal class JWTTokenService : IJWTTokenService
         var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId);
         if (storedToken is null)
         {
-            _logger.LogError("The token does not exist.");
-            throw new HubIdentityException();
+            throw new HubIdentityException("The token does not exist.");
         }
         // update current token and save changes
         storedToken.IsUsed = true;
@@ -154,8 +148,7 @@ internal class JWTTokenService : IJWTTokenService
         var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId);
         if (storedToken is null)
         {
-            _logger.LogError("The token does not exist.");
-            throw new HubIdentityException();
+            throw new HubIdentityException("The token does not exist.");
         }
         // update current token and save changes
         storedToken.IsRevoked = true;
