@@ -1,5 +1,4 @@
-﻿using Application.Common.Interface;
-using Shared.Contract.SuperHero;
+﻿using Shared.Contract.SuperHero;
 
 namespace Application.Feature.SuperHero;
 

@@ -1,5 +1,4 @@
-﻿using Application.Common.Interface;
-using Shared.Contract.Identity;
+﻿using Shared.Contract.Identity;
 
 namespace Application.Feature.Identity.LoginUser;
 

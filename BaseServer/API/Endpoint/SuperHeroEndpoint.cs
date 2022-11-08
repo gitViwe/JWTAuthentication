@@ -1,5 +1,4 @@
-﻿using API.Extension;
-using Application.Feature.SuperHero;
+﻿using Application.Feature.SuperHero;
 using MediatR;
 using Shared.Contract.SuperHero;
 using Shared.Wrapper;

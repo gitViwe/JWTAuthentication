@@ -5,15 +5,15 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
     public RegisterUserCommandValidator()
     {
         RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("Username is required.")
+            .NotEmpty()
             .MinimumLength(5).WithMessage("Username must be at least 5 characters long.");
 
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email Address is required.")
+            .NotEmpty()
             .EmailAddress().WithMessage("Email Address is invalid");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required.")
+            .NotEmpty()
             .MinimumLength(8).WithMessage("Password must be at least 8 characters long.");
 
         RuleFor(x => x.PasswordConfirmation)
