@@ -79,8 +79,22 @@ internal static class ServiceCollectionExtension
         services.AddSingleton(tokenValidationParams);
 
         // create the parameters used to validate refreshing tokens
-        tokenValidationParams.ValidateLifetime = false;
-        services.AddSingleton(new RefreshTokenValidationParameters(tokenValidationParams));
+        var refreshTokenValidationParams = new TokenValidationParameters
+        {
+            ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
+            ValidAudiences = new string[]
+            {
+                configuration[HubConfigurations.API.ServerUrl]!,
+                configuration[HubConfigurations.API.ClientUrl]!
+            },
+            // specify the security key used for 
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            // validates the signature of the key
+            ValidateIssuerSigningKey = true,
+            // do not validate token expiry
+            ValidateLifetime = false,
+        };
+        services.AddSingleton(new RefreshTokenValidationParameters(refreshTokenValidationParams));
 
         // configures authentication using JWT
         services.AddAuthentication(options =>
