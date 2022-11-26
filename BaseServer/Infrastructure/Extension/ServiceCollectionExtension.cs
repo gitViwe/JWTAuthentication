@@ -78,6 +78,10 @@ internal static class ServiceCollectionExtension
         // add Token Validation Parameters as singleton service
         services.AddSingleton(tokenValidationParams);
 
+        // create the parameters used to validate refreshing tokens
+        tokenValidationParams.ValidateLifetime = false;
+        services.AddSingleton(new RefreshTokenValidationParameters(tokenValidationParams));
+
         // configures authentication using JWT
         services.AddAuthentication(options =>
         {
@@ -96,15 +100,13 @@ internal static class ServiceCollectionExtension
             {
                 OnAuthenticationFailed = context =>
                 {
-                    int statusCode = (int)HttpStatusCode.InternalServerError;
+                    int statusCode = (int)HttpStatusCode.Unauthorized;
                     string contentType = MediaTypeNames.Application.Json;
-                    IResponse response = Response.Fail(ErrorDescription.Authorization.InternalServerError);
+                    IResponse response = Response.Fail(ErrorDescription.Authorization.Unauthorized);
 
                     // JWT token has expired
                     if (context.Exception is SecurityTokenExpiredException)
                     {
-                        statusCode = (int)HttpStatusCode.Unauthorized;
-                        contentType = MediaTypeNames.Application.Json;
                         response = Response.Fail(ErrorDescription.Authorization.ExpiredToken);
                     }
 

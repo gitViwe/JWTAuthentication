@@ -21,17 +21,20 @@ internal class JWTTokenService : IJWTTokenService
     private readonly APIConfiguration _configuration;
     private readonly HubDbContext _dbContext;
     private readonly TokenValidationParameters _validationParameters;
+    private readonly RefreshTokenValidationParameters _refreshValidationParameters;
     private readonly IHttpContextAccessor _contextAccessor;
 
     public JWTTokenService(
         IOptionsMonitor<APIConfiguration> optionsMonitor,
         HubDbContext dbContext,
         TokenValidationParameters validationParameters,
+        RefreshTokenValidationParameters refreshValidationParameters,
         IHttpContextAccessor contextAccessor)
     {
         _configuration = optionsMonitor.CurrentValue;
         _dbContext = dbContext;
         _validationParameters = validationParameters;
+        _refreshValidationParameters = refreshValidationParameters;
         _contextAccessor = contextAccessor;
     }
 
@@ -82,7 +85,7 @@ internal class JWTTokenService : IJWTTokenService
         try
         {
             // verify that the token is a JWT token
-            var jwtClaims = handler.ValidateToken(request.Token, _validationParameters, out var validatedToken);
+            var jwtClaims = handler.ValidateToken(request.Token, _refreshValidationParameters, out var validatedToken);
 
             if (validatedToken is JwtSecurityToken securityToken)
             {

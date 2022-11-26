@@ -23,5 +23,6 @@ public static class HubConfigurations
         public const string SQL = "SQL";
         public const string SQLite = "SQLite";
         public const string CosmosDb = "CosmosDb";
+        public const string PostgreSQL = "PostgreSQL";
     }
 }
