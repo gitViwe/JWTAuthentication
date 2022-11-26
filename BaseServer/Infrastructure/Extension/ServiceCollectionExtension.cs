@@ -36,7 +36,7 @@ internal static class ServiceCollectionExtension
         return services.AddDbContext<HubDbContext>(options =>
         {
             // using an SQlite provider
-            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite), b => b.MigrationsAssembly("Infrastructure"));
+            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!, b => b.MigrationsAssembly("Infrastructure"));
         });
     }
 
@@ -58,7 +58,7 @@ internal static class ServiceCollectionExtension
     internal static IServiceCollection RegisterAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         // get the JWT key from the APP settings file
-        var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]);
+        var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
 
         // create the parameters used to validate
         var tokenValidationParams = new TokenValidationParameters
@@ -66,8 +66,8 @@ internal static class ServiceCollectionExtension
             ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
             ValidAudiences = new string[]
             {
-                configuration[HubConfigurations.API.ServerUrl],
-                configuration[HubConfigurations.API.ClientUrl]
+                configuration[HubConfigurations.API.ServerUrl]!,
+                configuration[HubConfigurations.API.ClientUrl]!
             },
             // specify the security key used for 
             IssuerSigningKey = new SymmetricSecurityKey(key),
@@ -155,7 +155,7 @@ internal static class ServiceCollectionExtension
                 if (propertyValue is not null)
                 {
                     // add new permission policy
-                    options.AddPolicy(propertyValue.ToString(), policy => policy.RequireClaim(HubClaimTypes.Permission, propertyValue.ToString())
+                    options.AddPolicy(propertyValue.ToString()!, policy => policy.RequireClaim(HubClaimTypes.Permission, propertyValue.ToString()!)
                            // add JWT Bearer authentication scheme to this policy
                            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme));
                 }
@@ -180,8 +180,8 @@ internal static class ServiceCollectionExtension
                         // allow requests from this URL
                         .WithOrigins(new string[]
                         {
-                            configuration[HubConfigurations.API.ServerUrl].TrimEnd('/'),
-                            configuration[HubConfigurations.API.ClientUrl].TrimEnd('/')
+                            configuration[HubConfigurations.API.ServerUrl]!.TrimEnd('/'),
+                            configuration[HubConfigurations.API.ClientUrl]!.TrimEnd('/')
                         });
                 });
         });
