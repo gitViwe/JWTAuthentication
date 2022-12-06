@@ -3,7 +3,7 @@ type: Request
 parentId: wrk_bffdf87ee96b4b2ba53dd5d74b14bb72
 modified: 1670341957577
 created: 1667587747366
-url: "{{ base_url }}/api/superhero/2&5"
+url: "{{ base_url }}/api/superhero/{{ currentPage }}&{{ pageSize }}"
 name: /api/superhero/{currentPage}&{pageSize}
 description: ""
 method: GET
