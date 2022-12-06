@@ -1,0 +1,30 @@
+_id: req_wrk_bffdf87ee96b4b2ba53dd5d74b14bb72e08c7735
+type: Request
+parentId: wrk_bffdf87ee96b4b2ba53dd5d74b14bb72
+modified: 1670351981923
+created: 1667587747377
+url: "{{ base_url }}/api/account/refresh-token"
+name: /api/account/refresh-token
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: >-
+    {
+    		"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJkMGM5YTU0OS01MWNlLTRhN2QtODhjNi0yOGUxZDgxNDVlZTAiLCJ1bmlxdWVfbmFtZSI6IlZpd2U0NTYiLCJlbWFpbCI6ImV4YW1wbGUtMkBlbWFpbC5jb20iLCJqdGkiOiJmZTZkMDA3NC1kNTAxLTRhZTUtOTljZS0yMzdkNmNhOGVjMDgiLCJuYmYiOjE2Njk0NTk4NzIsImV4cCI6MTY2OTQ2MDQ3MiwiaWF0IjoxNjY5NDU5ODcyLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3MTYxIiwiYXVkIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzE2MSJ9.wwqL6K8L82rbvmJ_3fLZNHXarTobN4t-TC13tXpuHgc",
+    		"refreshToken": "Rz7FGJOkrkT9cCmXKDSSULO0FMqbQo86iOuN7iYbNRZVwRDNeV1uDxfw1SSLq2gEC"
+    	}
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+    id: pair_e6d065a39b424914ae5f083151417dd9
+authentication: {}
+metaSortKey: -1667587747377
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

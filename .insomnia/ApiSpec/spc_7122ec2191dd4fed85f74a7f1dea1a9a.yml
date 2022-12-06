@@ -1,0 +1,507 @@
+_id: spc_7122ec2191dd4fed85f74a7f1dea1a9a
+type: ApiSpec
+parentId: wrk_bffdf87ee96b4b2ba53dd5d74b14bb72
+modified: 1670352124025
+created: 1667587594374
+fileName: JWT Authentication
+contents: >-
+  {
+    "openapi": "3.0.1",
+    "info": {
+      "title": "Hub API",
+      "description": "A .NET 6 Web API demo project to showcase Minimal API, Clean Architecture, JSON Web Token authentication and Swagger / Open API documentation.",
+      "contact": {
+        "name": "Viwe Nkepu",
+        "url": "https://localhost:7161",
+        "email": "viwe.nkepu@hotmail.com"
+      },
+      "license": {
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "version": "v1.0"
+    },
+    "paths": {
+      "/api/account/register": {
+        "post": {
+          "tags": [
+            "Account"
+          ],
+          "operationId": "Register",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TokenResponseResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/account/login": {
+        "post": {
+          "tags": [
+            "Account"
+          ],
+          "operationId": "Login",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TokenResponseResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/account/refresh-token": {
+        "post": {
+          "tags": [
+            "Account"
+          ],
+          "operationId": "RefreshToken",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TokenResponseResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/superhero/{currentPage}&{pageSize}": {
+        "get": {
+          "tags": [
+            "Superhero"
+          ],
+          "operationId": "GetPaginated",
+          "parameters": [
+            {
+              "name": "currentPage",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            {
+              "name": "pageSize",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuperHeroResponsePaginatedResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Appearance": {
+          "type": "object",
+          "properties": {
+            "gender": {
+              "type": "string",
+              "nullable": true
+            },
+            "race": {
+              "type": "string",
+              "nullable": true
+            },
+            "height": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "weight": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "eyeColor": {
+              "type": "string",
+              "nullable": true
+            },
+            "hairColor": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Biography": {
+          "type": "object",
+          "properties": {
+            "fullName": {
+              "type": "string",
+              "nullable": true
+            },
+            "alterEgos": {
+              "type": "string",
+              "nullable": true
+            },
+            "aliases": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "placeOfBirth": {
+              "type": "string",
+              "nullable": true
+            },
+            "firstAppearance": {
+              "type": "string",
+              "nullable": true
+            },
+            "publisher": {
+              "type": "string",
+              "nullable": true
+            },
+            "alignment": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Connections": {
+          "type": "object",
+          "properties": {
+            "groupAffiliation": {
+              "type": "string",
+              "nullable": true
+            },
+            "relatives": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Images": {
+          "type": "object",
+          "properties": {
+            "xs": {
+              "type": "string",
+              "format": "uri",
+              "nullable": true
+            },
+            "sm": {
+              "type": "string",
+              "format": "uri",
+              "nullable": true
+            },
+            "md": {
+              "type": "string",
+              "format": "uri",
+              "nullable": true
+            },
+            "lg": {
+              "type": "string",
+              "format": "uri",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LoginRequest": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "password": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Powerstats": {
+          "type": "object",
+          "properties": {
+            "intelligence": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "strength": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "speed": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "durability": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "power": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "combat": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false
+        },
+        "RegisterRequest": {
+          "type": "object",
+          "properties": {
+            "userName": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "password": {
+              "type": "string",
+              "nullable": true
+            },
+            "passwordConfirmation": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "SuperHeroResponse": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "slug": {
+              "type": "string",
+              "nullable": true
+            },
+            "powerstats": {
+              "$ref": "#/components/schemas/Powerstats"
+            },
+            "appearance": {
+              "$ref": "#/components/schemas/Appearance"
+            },
+            "biography": {
+              "$ref": "#/components/schemas/Biography"
+            },
+            "work": {
+              "$ref": "#/components/schemas/Work"
+            },
+            "connections": {
+              "$ref": "#/components/schemas/Connections"
+            },
+            "images": {
+              "$ref": "#/components/schemas/Images"
+            }
+          },
+          "additionalProperties": false
+        },
+        "SuperHeroResponsePaginatedResponse": {
+          "type": "object",
+          "properties": {
+            "succeeded": {
+              "type": "boolean",
+              "readOnly": true
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true,
+              "readOnly": true
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SuperHeroResponse"
+              },
+              "nullable": true,
+              "readOnly": true
+            },
+            "currentPage": {
+              "type": "integer",
+              "format": "int32",
+              "readOnly": true
+            },
+            "totalPages": {
+              "type": "integer",
+              "format": "int32",
+              "readOnly": true
+            },
+            "totalCount": {
+              "type": "integer",
+              "format": "int32",
+              "readOnly": true
+            },
+            "pageSize": {
+              "type": "integer",
+              "format": "int32",
+              "readOnly": true
+            },
+            "hasPreviousPage": {
+              "type": "boolean",
+              "readOnly": true
+            },
+            "hasNextPage": {
+              "type": "boolean",
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "TokenRequest": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "nullable": true
+            },
+            "refreshToken": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "TokenResponse": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "nullable": true
+            },
+            "refreshToken": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "TokenResponseResponse": {
+          "type": "object",
+          "properties": {
+            "succeeded": {
+              "type": "boolean",
+              "readOnly": true
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true,
+              "readOnly": true
+            },
+            "data": {
+              "$ref": "#/components/schemas/TokenResponse"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Work": {
+          "type": "object",
+          "properties": {
+            "occupation": {
+              "type": "string",
+              "nullable": true
+            },
+            "base": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "securitySchemes": {
+        "Bearer": {
+          "type": "http",
+          "description": "Authorize using JWT Bearer token.",
+          "scheme": "Bearer"
+        }
+      }
+    },
+    "security": [
+      {
+        "Bearer": [
+          "Bearer"
+        ]
+      }
+    ]
+  }
+contentType: yaml
