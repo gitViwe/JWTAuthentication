@@ -1,7 +1,7 @@
 _id: req_be2cac4b2910475eb787c614548771b4
 type: Request
 parentId: wrk_bffdf87ee96b4b2ba53dd5d74b14bb72
-modified: 1670352460211
+modified: 1670352746352
 created: 1667633586608
 url: https://api.sendgrid.com/v3/mail/send
 name: /mail/send
@@ -45,6 +45,7 @@ headers:
 authentication:
   type: bearer
   token: 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
+  disabled: true
 metaSortKey: -1667633586608
 isPrivate: false
 settingStoreCookies: true
