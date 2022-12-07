@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+
+  aspnetdemo:
+    build:
+        context: src/
+        dockerfile: Dockerfile
+    environment:
+        ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - 5161:80
+      - 7161:443
