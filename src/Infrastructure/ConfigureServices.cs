@@ -2,6 +2,7 @@
 using Infrastructure.Extension;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Infrastructure;
 
@@ -17,5 +18,10 @@ public static class ConfigureServices
         services.RegisterCors(configuration);
 
         return services;
+    }
+
+    public static async Task UseInfrastructureServices(this IHost host)
+    {
+        await host.ApplyMigrationAsync();
     }
 }

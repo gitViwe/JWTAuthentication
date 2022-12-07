@@ -2,10 +2,11 @@ version: "3.9"
 
 services:
 
-  aspnetdemo:
+  token-api:
+    image: hubviwe/jwtauthentication.token.api:1.0.0
     build:
         context: src/
-        dockerfile: Dockerfile
+        dockerfile: API/Dockerfile
     environment:
         ASPNETCORE_ENVIRONMENT: Development
     ports:
