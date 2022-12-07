@@ -1,0 +1,56 @@
+_id: req_be2cac4b2910475eb787c614548771b4
+type: Request
+parentId: wrk_bffdf87ee96b4b2ba53dd5d74b14bb72
+modified: 1670352746352
+created: 1667633586608
+url: https://api.sendgrid.com/v3/mail/send
+name: /mail/send
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"personalizations": [
+    		{
+    			"to": [
+    				{
+    					"email": "veemvolt@gmail.com",
+    					"name": "John Doe"
+    				}
+    			],
+    			"subject": "Hello, World!"
+    		}
+    	],
+    	"content": [
+    		{
+    			"type": "text/html",
+    			"value": "Heya!"
+    		}
+    	],
+    	"from": {
+    		"email": "viwe.nkepu@hotmail.com",
+    		"name": "Viwe Nkepu"
+    	},
+    	"reply_to": {
+    		"email": "viwe.nkepu@hotmail.com",
+    		"name": "Viwe Nkepu"
+    	}
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+    id: pair_fc3119b318374e58b8e2e08a7a003098
+authentication:
+  type: bearer
+  token: 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
+  disabled: true
+metaSortKey: -1667633586608
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
