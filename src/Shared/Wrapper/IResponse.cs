@@ -5,7 +5,6 @@
 /// </summary>
 public interface IResponse
 {
-
     /// <summary>
     /// Flags whether the process was successful
     /// </summary>

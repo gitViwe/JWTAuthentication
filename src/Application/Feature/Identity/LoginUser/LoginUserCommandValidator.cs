@@ -1,6 +1,6 @@
 ﻿namespace Application.Feature.Identity.LoginUser;
 
-internal class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
+public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
 {
     public LoginUserCommandValidator()
     {

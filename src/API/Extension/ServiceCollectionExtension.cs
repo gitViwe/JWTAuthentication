@@ -41,18 +41,18 @@ internal static class ServiceCollectionExtension
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
+                    Id = JwtBearerDefaults.AuthenticationScheme
                 }
             };
 
             // add authorization scheme to swagger UI
-            options.AddSecurityDefinition("Bearer", securitySchema);
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securitySchema);
 
             // create security requirements
             var securityRequirement = new OpenApiSecurityRequirement
-                {
-                    { securitySchema, new[] { "Bearer" } }
-                };
+            {
+                { securitySchema, new[] { JwtBearerDefaults.AuthenticationScheme } }
+            };
 
             // add security requirements to swagger UI
             options.AddSecurityRequirement(securityRequirement);
