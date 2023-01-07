@@ -2,6 +2,7 @@
 using Application.Configuration;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
+using Infrastructure.Persistance.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -50,7 +51,7 @@ internal class JWTTokenService : IJWTTokenService
             Audience = GetAudienceUrl(),
             Issuer = _configuration.ServerUrl,
             Subject = new ClaimsIdentity(GetRequiredClaims(claimsPrincipal.Claims)),
-            Expires = DateTime.UtcNow.AddMinutes(10),
+            Expires = DateTime.UtcNow.AddMinutes(5),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         // creates a security token
@@ -79,13 +80,20 @@ internal class JWTTokenService : IJWTTokenService
         };
     }
 
-    public ClaimsPrincipal ValidateToken(TokenRequest request)
+    public ClaimsPrincipal ValidateToken(TokenRequest request, bool isRefreshToken = false)
     {
         var handler = new JwtSecurityTokenHandler();
         try
         {
             // verify that the token is a JWT token
-            var jwtClaims = handler.ValidateToken(request.Token, _refreshValidationParameters, out var validatedToken);
+            var jwtClaims = isRefreshToken
+                ? handler.ValidateToken(request.Token, _refreshValidationParameters, out SecurityToken validatedToken)
+                : handler.ValidateToken(request.Token, _validationParameters, out validatedToken);
+
+            if (jwtClaims is null)
+            {
+                throw new HubIdentityException("The token is invalid.");
+            }
 
             if (validatedToken is JwtSecurityToken securityToken)
             {
@@ -117,7 +125,7 @@ internal class JWTTokenService : IJWTTokenService
             }
 
             // verify the token ID
-            var tokenID = jwtClaims?.Claims?.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            var tokenID = jwtClaims.Claims?.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Jti)?.Value;
             if (storedToken.JwtId != tokenID)
             {
                 throw new HubIdentityException($"The token with ID: {tokenID}, is not valid.");

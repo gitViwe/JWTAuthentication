@@ -1,5 +1,5 @@
 ﻿using Application.Common.Interface;
-using Infrastructure.Identity;
+using Infrastructure.Persistance.Entity;
 using Microsoft.AspNetCore.Identity;
 using Shared.Constant;
 using Shared.Contract.Identity;
@@ -48,7 +48,7 @@ internal class HubIdentityService : IHubIdentityService
 
     public async Task<IResponse> RefreshToken(TokenRequest request, CancellationToken token)
     {
-        var claimsPrincipal = _tokenService.ValidateToken(request);
+        var claimsPrincipal = _tokenService.ValidateToken(request, isRefreshToken: true);
 
         // mark refresh token as used
         _tokenService.FlagAsUsedToken(claimsPrincipal.GetTokenID());

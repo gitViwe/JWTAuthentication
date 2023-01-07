@@ -1,7 +1,7 @@
 ﻿using Domain.Common;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Infrastructure.Identity
+namespace Infrastructure.Persistance.Entity
 {
     /// <summary>
     /// Holds the information used to request a new JWT token

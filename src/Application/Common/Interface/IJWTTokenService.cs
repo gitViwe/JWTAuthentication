@@ -19,9 +19,10 @@ public interface IJWTTokenService
     /// Validates the JWT token and refresh token
     /// </summary>
     /// <param name="request">The token and refresh token to validate</param>
+    /// <param name="isRefreshToken">Determines if the request is for a refresh token</param>
     /// <returns>The <see cref="ClaimsPrincipal"/> from the validate token</returns>
     /// <exception cref="Shared.Exception.HubIdentityException"></exception>
-    ClaimsPrincipal ValidateToken(TokenRequest request);
+    ClaimsPrincipal ValidateToken(TokenRequest request, bool isRefreshToken = false);
 
     /// <summary>
     /// Updated the used flag of the refresh token
