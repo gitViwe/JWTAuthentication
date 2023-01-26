@@ -1,5 +1,6 @@
 ﻿using Application;
 using Infrastructure.Extension;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,11 +9,11 @@ namespace Infrastructure;
 
 public static class ConfigureServices
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
         services.AddApplicationServices(configuration);
         services.RegisterServiceImplementation();
-        services.RegisterDatabaseContext(configuration);
+        services.RegisterDatabaseContext(configuration, environment);
         services.RegisterIdentity();
         services.RegisterAuthentication(configuration);
         services.RegisterCors(configuration);
@@ -20,8 +21,15 @@ public static class ConfigureServices
         return services;
     }
 
-    public static async Task UseInfrastructureServices(this IHost host)
+    public static async Task UseInfrastructureServices(this IHost host, IWebHostEnvironment environment)
     {
-        await host.ApplyMigrationAsync();
+        if (environment.IsEnvironment("Docker"))
+        {
+            await host.CreateDatabaseAsync();
+        }
+        else
+        {
+            await host.ApplyMigrationAsync();
+        }
     }
 }

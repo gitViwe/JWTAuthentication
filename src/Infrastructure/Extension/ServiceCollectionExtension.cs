@@ -5,11 +5,13 @@ using Infrastructure.Persistance.Entity;
 using Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Constant;
 using Shared.Wrapper;
@@ -32,12 +34,21 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
+        if (environment.IsEnvironment("Docker"))
+        {
+            return services.AddDbContext<HubDbContext>(options =>
+            {
+                // using an SQlite provider
+                options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
+                                    b => b.MigrationsAssembly("Infrastructure"));
+            });
+        }
+
         return services.AddDbContext<HubDbContext>(options =>
         {
-            // using an SQlite provider
-            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!, b => b.MigrationsAssembly("Infrastructure"));
+            options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
         });
     }
 

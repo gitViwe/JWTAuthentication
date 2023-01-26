@@ -8,14 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHubAPISwagger(builder.Configuration);
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
 app.UseHubExceptionHandler(app.Logger);
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
@@ -33,6 +33,6 @@ app.UseAuthorization();
 app.MapSuperHeroEndpoint();
 app.MapAccountEndpoint();
 
-await app.UseInfrastructureServices();
+await app.UseInfrastructureServices(app.Environment);
 
 app.Run();
