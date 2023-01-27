@@ -12,6 +12,8 @@ services:
         ASPNETCORE_ENVIRONMENT: Docker
     ports:
       - 5161:80
+    depends_on:
+      - postgres
 
   postgres:
     image: "postgres:13-alpine"

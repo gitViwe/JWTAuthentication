@@ -40,15 +40,15 @@ internal static class ServiceCollectionExtension
         {
             return services.AddDbContext<HubDbContext>(options =>
             {
-                // using an SQlite provider
-                options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
-                                    b => b.MigrationsAssembly("Infrastructure"));
+                options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
             });
         }
 
         return services.AddDbContext<HubDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
+            // using an SQlite provider
+            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
+                                b => b.MigrationsAssembly("Infrastructure"));
         });
     }
 
