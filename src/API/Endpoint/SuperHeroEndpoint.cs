@@ -1,7 +1,7 @@
 ﻿using Application.Feature.SuperHero;
+using gitViwe.Shared;
 using MediatR;
 using Shared.Contract.SuperHero;
-using Shared.Wrapper;
 using System.Net;
 using System.Net.Mime;
 

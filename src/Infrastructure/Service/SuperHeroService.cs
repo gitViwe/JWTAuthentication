@@ -1,8 +1,8 @@
 ﻿using Application.Common.Interface;
+using gitViwe.Shared;
 using Microsoft.AspNetCore.Hosting;
 using Shared.Contract;
 using Shared.Contract.SuperHero;
-using Shared.Wrapper;
 using System.Text.Json;
 
 namespace Infrastructure.Service;

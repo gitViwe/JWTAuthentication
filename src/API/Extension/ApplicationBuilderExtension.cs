@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Shared.Wrapper;
-using System.Net.Mime;
-using System.Net;
+﻿using gitViwe.ProblemDetail;
+using gitViwe.Shared;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-using Shared.Constant;
-using Shared.Exception;
 
 namespace API.Extension;
 
@@ -19,35 +17,48 @@ internal static class ApplicationBuilderExtension
         {
             options.Run(async context =>
             {
-                int statusCode = (int)HttpStatusCode.InternalServerError;
-                string contentType = MediaTypeNames.Application.Json;
-                IResponse response = Response.Fail(ErrorDescription.Authorization.InternalServerError);
-
-                // attempt to get exception details
                 var handlerFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+
+                int statusCode = StatusCodes.Status500InternalServerError;
+                string response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, statusCode));
+
                 if (handlerFeature is not null)
                 {
-                    // log error message
-                    logger.LogError(handlerFeature.Error, handlerFeature.Error.Message);
-
-                    if (handlerFeature.Error is HubValidationException validationException)
+                    if (handlerFeature.Error is ForbiddenException forbidden)
                     {
-                        statusCode = (int)HttpStatusCode.BadRequest;
-                        contentType = MediaTypeNames.Application.Json;
-                        response = Response.Fail(validationException.ErrorMessages);
+                        statusCode = StatusCodes.Status403Forbidden;
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, statusCode, forbidden.Detail));
+                        logger.Log(LogLevel.Warning, forbidden, "A forbidden exception occurred. Problem detail: {response}", response);
                     }
-                    else if (handlerFeature.Error is HubIdentityException)
+                    else if (handlerFeature.Error is NotFoundException notFound)
                     {
-                        statusCode = (int)HttpStatusCode.Forbidden;
-                        contentType = MediaTypeNames.Application.Json;
-                        response = Response.Fail(ErrorDescription.Generic.Identity);
+                        statusCode = StatusCodes.Status404NotFound;
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, statusCode, notFound.Detail));
+                        logger.Log(LogLevel.Warning, notFound, "A not found exception occurred. Problem detail: {response}", response);
+                    }
+                    else if (handlerFeature.Error is UnauthorizedException unauthorized)
+                    {
+                        statusCode = StatusCodes.Status401Unauthorized;
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, statusCode, unauthorized.Detail));
+                        logger.Log(LogLevel.Information, unauthorized, "An unauthorized exception occurred. Problem detail: {response}", response);
+                    }
+                    else if (handlerFeature.Error is ValidationException validation)
+                    {
+                        statusCode = StatusCodes.Status400BadRequest;
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateValidationProblemDetails(context, statusCode, validation.ToDictionary()));
+                        logger.Log(LogLevel.Information, validation, "A validation exception occurred. Problem detail: {response}", response);
+                    }
+                    else
+                    {
+                        logger.LogError(handlerFeature.Error, "A unhandled exception occurred. Problem detail: {response}", response);
                     }
                 }
+                else
+                {
+                    logger.LogError("A unhandled exception occurred. Problem detail: {response}", response);
+                }
 
-                context.Response.StatusCode = statusCode;
-                context.Response.ContentType = contentType;
-                var content = JsonSerializer.Serialize(response);
-                await context.Response.WriteAsync(content);
+                await context.Response.WriteAsync(response);
                 await context.Response.CompleteAsync();
             });
         });

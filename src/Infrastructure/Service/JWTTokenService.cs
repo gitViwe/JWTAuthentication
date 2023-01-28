@@ -1,5 +1,7 @@
 ﻿using Application.Common.Interface;
 using Application.Configuration;
+using gitViwe.Shared;
+using gitViwe.Shared.Extension;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.Entity;
@@ -8,9 +10,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Constant;
 using Shared.Contract.Identity;
-using Shared.Exception;
-using Shared.Extension;
-using Shared.Utility;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -92,7 +91,7 @@ internal class JWTTokenService : IJWTTokenService
 
             if (jwtClaims is null)
             {
-                throw new HubIdentityException("The token is invalid.");
+                throw new UnauthorizedException("The token is invalid.");
             }
 
             if (validatedToken is JwtSecurityToken securityToken)
@@ -101,7 +100,7 @@ internal class JWTTokenService : IJWTTokenService
                 var result = securityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
                 if (result is false)
                 {
-                    throw new HubIdentityException("Token has invalid security algorithm.");
+                    throw new UnauthorizedException("Token has invalid security algorithm.");
                 }
             }
 
@@ -109,33 +108,33 @@ internal class JWTTokenService : IJWTTokenService
             var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.Token == request.RefreshToken);
             if (storedToken is null)
             {
-                throw new HubIdentityException("The token does not exist.");
+                throw new UnauthorizedException("The token does not exist.");
             }
 
             // verify that the token is not being used
             if (storedToken.IsUsed)
             {
-                throw new HubIdentityException("The token has already been used.");
+                throw new UnauthorizedException("The token has already been used.");
             }
 
             // verify that the token has not been revoked
             if (storedToken.IsRevoked)
             {
-                throw new HubIdentityException("The token has been revoked.");
+                throw new UnauthorizedException("The token has been revoked.");
             }
 
             // verify the token ID
-            var tokenID = jwtClaims.Claims?.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            var tokenID = jwtClaims.GetTokenID();
             if (storedToken.JwtId != tokenID)
             {
-                throw new HubIdentityException($"The token with ID: {tokenID}, is not valid.");
+                throw new UnauthorizedException($"The token with ID: {tokenID}, is not valid.");
             }
 
             return jwtClaims;
         }
         catch (SecurityTokenValidationException ex)
         {
-            throw new HubIdentityException("Token validation failed.", ex);
+            throw new UnauthorizedException("Token validation failed.", ex);
         }
     }
 
@@ -145,7 +144,7 @@ internal class JWTTokenService : IJWTTokenService
         var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId);
         if (storedToken is null)
         {
-            throw new HubIdentityException("The token does not exist.");
+            throw new UnauthorizedException("The token does not exist.");
         }
         // update current token and save changes
         storedToken.IsUsed = true;
@@ -159,7 +158,7 @@ internal class JWTTokenService : IJWTTokenService
         var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId);
         if (storedToken is null)
         {
-            throw new HubIdentityException("The token does not exist.");
+            throw new UnauthorizedException("The token does not exist.");
         }
         // update current token and save changes
         storedToken.IsRevoked = true;
@@ -187,7 +186,7 @@ internal class JWTTokenService : IJWTTokenService
     {
         if (_contextAccessor.HttpContext is null)
         {
-            throw new HubIdentityException("Invalid request host.");
+            throw new UnauthorizedException("Invalid request host.");
         }
 
         string requestHost = _contextAccessor.HttpContext.Request.Host.Value;

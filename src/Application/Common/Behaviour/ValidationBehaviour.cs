@@ -1,5 +1,4 @@
-﻿using Shared.Exception;
-
+﻿
 namespace Application.Common.Behaviour;
 
 internal class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
@@ -20,13 +19,9 @@ internal class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
 
             var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken)));
 
-            var failures = validationResults
-                .Where(r => r.Errors.Any())
-                .SelectMany(r => r.Errors)
-                .ToArray();
+            var failure = validationResults.Where(result => result.IsValid == false).FirstOrDefault();
 
-            if (failures.Any())
-                throw new HubValidationException(failures);
+            if (failure is not null) throw new gitViwe.Shared.ValidationException(failure.ToDictionary());
         }
         return await next();
     }
