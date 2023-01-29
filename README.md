@@ -12,7 +12,7 @@ To get a local copy up and running follow these simple example steps.
 
 Things you need to use the software and how to install them.
 * [Visual Studio / Visual Studio Code](https://visualstudio.microsoft.com/)
-* [.NET 6](https://dotnet.microsoft.com/en-us/download/dotnet)
+* [.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet)
 * [Docker](https://www.docker.com/)
 
 ### Installation

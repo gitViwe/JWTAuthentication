@@ -3,7 +3,7 @@ version: "3.9"
 services:
 
   token-api:
-    image: hubviwe/jwtauthentication.token.api:dev
+    image: hubviwe/jwtauthentication.token.api:1.0.1
     container_name: token-api
     build:
         context: src/
