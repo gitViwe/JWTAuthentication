@@ -20,6 +20,8 @@ public static class SuperHeroEndpoint
         app.MapGet(Shared.Route.API.SuperHeroEndpoint.GetPaginated, GetPaginated)
             .WithName(nameof(GetPaginated))
             .Produces<PaginatedResponse<SuperHeroResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json").WithDescription("Get a paginated result for super heroes")
             .WithTags(Shared.Route.API.SuperHeroEndpoint.TAG_NAME);
     }
 
