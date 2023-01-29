@@ -24,20 +24,20 @@ public static class AccountEndpoint
         endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.Register, Register)
             .WithName(nameof(Register))
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesValidationProblem();
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json");
 
         endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
             .WithName(nameof(Login))
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesValidationProblem();
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json");
 
         endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
             .WithName(nameof(RefreshToken))
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesValidationProblem();
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json");
     }
 
     private static async Task<IResult> Register(

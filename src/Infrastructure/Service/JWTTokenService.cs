@@ -50,7 +50,7 @@ internal class JWTTokenService : IJWTTokenService
             Audience = GetAudienceUrl(),
             Issuer = _configuration.ServerUrl,
             Subject = new ClaimsIdentity(GetRequiredClaims(claimsPrincipal.Claims)),
-            Expires = DateTime.UtcNow.AddMinutes(5),
+            Expires = DateTime.UtcNow.AddMinutes(_configuration.TokenExpityInMinutes),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         // creates a security token
@@ -65,7 +65,7 @@ internal class JWTTokenService : IJWTTokenService
             IsRevoked = false,
             UserId = claimsPrincipal.GetUserId(),
             AddedDate = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddMinutes(120),
+            ExpiryDate = DateTime.UtcNow.AddMinutes(_configuration.RefreshTokenExpityInMinutes),
             Token = Conversion.RandomString(65)
         };
         // save to database

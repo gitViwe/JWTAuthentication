@@ -17,7 +17,6 @@ internal static class ApplicationBuilderExtension
             options.Run(async context =>
             {
                 var handlerFeature = context.Features.Get<IExceptionHandlerPathFeature>();
-
                 string response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, StatusCodes.Status500InternalServerError));
 
                 if (handlerFeature is not null)
