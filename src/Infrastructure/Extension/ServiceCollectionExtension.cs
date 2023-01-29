@@ -1,20 +1,20 @@
 ﻿using Application.Common.Interface;
+using gitViwe.ProblemDetail;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.Entity;
 using Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Constant;
-using Shared.Wrapper;
-using System.Net;
-using System.Net.Mime;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -32,12 +32,21 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
+        if (environment.IsEnvironment("Docker"))
+        {
+            return services.AddDbContext<HubDbContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
+            });
+        }
+
         return services.AddDbContext<HubDbContext>(options =>
         {
             // using an SQlite provider
-            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!, b => b.MigrationsAssembly("Infrastructure"));
+            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
+                                b => b.MigrationsAssembly("Infrastructure"));
         });
     }
 
@@ -115,40 +124,32 @@ internal static class ServiceCollectionExtension
             {
                 OnAuthenticationFailed = context =>
                 {
-                    int statusCode = (int)HttpStatusCode.Unauthorized;
-                    string contentType = MediaTypeNames.Application.Json;
-                    IResponse response = Response.Fail(ErrorDescription.Authorization.Unauthorized);
+                    int statusCode = StatusCodes.Status401Unauthorized;
+                    var response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, statusCode);
 
                     // JWT token has expired
                     if (context.Exception is SecurityTokenExpiredException)
                     {
-                        response = Response.Fail(ErrorDescription.Authorization.ExpiredToken);
+                        response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, statusCode, ErrorDescription.Authorization.ExpiredToken);
                     }
 
-                    context.Response.StatusCode = statusCode;
-                    context.Response.ContentType = contentType;
-                    var content = JsonSerializer.Serialize(response);
-                    return context.Response.WriteAsync(content);
+                    return context.Response.WriteAsync(JsonSerializer.Serialize(response));
                 },
                 OnChallenge = context =>
                 {
                     context.HandleResponse();
                     if (!context.Response.HasStarted)
                     {
-                        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                        context.Response.ContentType = MediaTypeNames.Application.Json;
-                        var result = JsonSerializer.Serialize(Response.Fail(ErrorDescription.Authorization.Unauthorized));
-                        return context.Response.WriteAsync(result);
+                        var response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status401Unauthorized, ErrorDescription.Authorization.Unauthorized);
+                        return context.Response.WriteAsync(JsonSerializer.Serialize(response));
                     }
 
                     return Task.CompletedTask;
                 },
                 OnForbidden = context =>
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                    context.Response.ContentType = MediaTypeNames.Application.Json;
-                    var result = JsonSerializer.Serialize(Response.Fail(ErrorDescription.Authorization.Forbidden));
-                    return context.Response.WriteAsync(result);
+                    var response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status403Forbidden, ErrorDescription.Authorization.Unauthorized);
+                    return context.Response.WriteAsync(JsonSerializer.Serialize(response));
                 },
             };
         });

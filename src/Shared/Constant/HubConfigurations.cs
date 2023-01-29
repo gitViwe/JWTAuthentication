@@ -13,6 +13,8 @@ public static class HubConfigurations
         public const string Secret = "APIConfiguration:Secret";
         public const string ClientUrl = "APIConfiguration:ClientUrl";
         public const string ServerUrl = "APIConfiguration:ServerUrl";
+        public const string TokenExpityInMinutes = "APIConfiguration:TokenExpityInMinutes";
+        public const string RefreshTokenExpityInMinutes = "APIConfiguration:RefreshTokenExpityInMinutes";
     }
 
     /// <summary>

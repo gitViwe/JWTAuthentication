@@ -15,13 +15,13 @@ internal static class ServiceCollectionExtension
             options.SwaggerDoc("v1", new OpenApiInfo
             {
                 Title = "Hub API",
-                Description = "A .NET 6 Web API demo project to showcase Minimal API, Clean Architecture, JSON Web Token authentication and Swagger / Open API documentation.",
+                Description = "A .NET 7 Web API demo project to showcase Minimal API, Clean Architecture, JSON Web Token authentication and Swagger / Open API documentation.",
                 Version = "v1.0",
                 Contact = new OpenApiContact()
                 {
                     Name = "Viwe Nkepu",
                     Email = "viwe.nkepu@hotmail.com",
-                    Url = new Uri(configuration[HubConfigurations.API.ClientUrl].TrimEnd('/'))
+                    Url = new Uri(configuration[HubConfigurations.API.ClientUrl]!.TrimEnd('/'))
                 },
                 License = new OpenApiLicense
                 {
@@ -58,7 +58,7 @@ internal static class ServiceCollectionExtension
             options.AddSecurityRequirement(securityRequirement);
 
             // get the file path for XML documentation
-            var fileName = Assembly.GetEntryAssembly().GetName().Name + ".xml";
+            var fileName = Assembly.GetEntryAssembly()!.GetName().Name + ".xml";
             var xmlCommentsFilePath = System.IO.Path.Combine(AppContext.BaseDirectory, fileName);
             // add XML documentation to swagger UI
             options.IncludeXmlComments(xmlCommentsFilePath, true);

@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Shared.Wrapper;
-using System.Net.Mime;
-using System.Net;
+﻿using gitViwe.ProblemDetail;
+using gitViwe.Shared;
+using Microsoft.AspNetCore.Diagnostics;
 using System.Text.Json;
-using Shared.Constant;
-using Shared.Exception;
 
 namespace API.Extension;
 
@@ -19,35 +16,42 @@ internal static class ApplicationBuilderExtension
         {
             options.Run(async context =>
             {
-                int statusCode = (int)HttpStatusCode.InternalServerError;
-                string contentType = MediaTypeNames.Application.Json;
-                IResponse response = Response.Fail(ErrorDescription.Authorization.InternalServerError);
-
-                // attempt to get exception details
                 var handlerFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                string response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, StatusCodes.Status500InternalServerError));
+
                 if (handlerFeature is not null)
                 {
-                    // log error message
-                    logger.LogError(handlerFeature.Error, handlerFeature.Error.Message);
-
-                    if (handlerFeature.Error is HubValidationException validationException)
+                    if (handlerFeature.Error is ForbiddenException forbidden)
                     {
-                        statusCode = (int)HttpStatusCode.BadRequest;
-                        contentType = MediaTypeNames.Application.Json;
-                        response = Response.Fail(validationException.ErrorMessages);
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, StatusCodes.Status403Forbidden, forbidden.Detail));
+                        logger.LogWarning(forbidden, "A forbidden exception occurred. Problem detail: {response}", response);
                     }
-                    else if (handlerFeature.Error is HubIdentityException)
+                    else if (handlerFeature.Error is NotFoundException notFound)
                     {
-                        statusCode = (int)HttpStatusCode.Forbidden;
-                        contentType = MediaTypeNames.Application.Json;
-                        response = Response.Fail(ErrorDescription.Generic.Identity);
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, StatusCodes.Status404NotFound, notFound.Detail));
+                        logger.LogWarning(notFound, "A not found exception occurred. Problem detail: {response}", response);
+                    }
+                    else if (handlerFeature.Error is UnauthorizedException unauthorized)
+                    {
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateProblemDetails(context, StatusCodes.Status401Unauthorized, unauthorized.Detail));
+                        logger.LogInformation(unauthorized, "An unauthorized exception occurred. Problem detail: {response}", response);
+                    }
+                    else if (handlerFeature.Error is ValidationException validation)
+                    {
+                        response = JsonSerializer.Serialize(ProblemDetailFactory.CreateValidationProblemDetails(context, StatusCodes.Status400BadRequest, validation.ToDictionary()));
+                        logger.LogInformation(validation, "A validation exception occurred. Problem detail: {response}", response);
+                    }
+                    else
+                    {
+                        logger.LogError(handlerFeature.Error, "A unhandled exception occurred. Problem detail: {response}", response);
                     }
                 }
+                else
+                {
+                    logger.LogError("A unhandled exception occurred. Problem detail: {response}", response);
+                }
 
-                context.Response.StatusCode = statusCode;
-                context.Response.ContentType = contentType;
-                var content = JsonSerializer.Serialize(response);
-                await context.Response.WriteAsync(content);
+                await context.Response.WriteAsync(response);
                 await context.Response.CompleteAsync();
             });
         });

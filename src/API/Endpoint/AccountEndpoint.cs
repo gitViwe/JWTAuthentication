@@ -3,8 +3,6 @@ using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
 using MediatR;
 using Shared.Contract.Identity;
-using Shared.Wrapper;
-using System.Net;
 using System.Net.Mime;
 
 namespace API.Endpoint;
@@ -19,23 +17,27 @@ public static class AccountEndpoint
     /// </summary>
     internal static void MapAccountEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost(Shared.Route.API.AcccountEndpoint.Register, Register)
+        var endpointGroup = app.MapGroup(Shared.Route.API.AcccountEndpoint.PREFIX)
             .AllowAnonymous()
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
+
+        endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.Register, Register)
             .WithName(nameof(Register))
-            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
-            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json");
 
-        app.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
-            .AllowAnonymous()
+        endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
             .WithName(nameof(Login))
-            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
-            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json");
 
-        app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
-            .AllowAnonymous()
+        endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
             .WithName(nameof(RefreshToken))
-            .Produces<Response<TokenResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
-            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json");
     }
 
     private static async Task<IResult> Register(

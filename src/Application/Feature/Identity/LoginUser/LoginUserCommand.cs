@@ -2,9 +2,9 @@
 
 namespace Application.Feature.Identity.LoginUser;
 
-public class LoginUserCommand : LoginRequest, IRequest<IResponse> { }
+public class LoginUserCommand : LoginRequest, IRequest<TokenResponse> { }
 
-internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, IResponse>
+internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, TokenResponse>
 {
     private readonly IHubIdentityService _hubIdentity;
 
@@ -13,7 +13,7 @@ internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, IResp
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<IResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<TokenResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         return await _hubIdentity.LoginUserAsync(request, cancellationToken);
     }
