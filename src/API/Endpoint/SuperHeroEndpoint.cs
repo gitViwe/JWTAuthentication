@@ -1,6 +1,7 @@
 ﻿using Application.Feature.SuperHero;
 using gitViwe.Shared;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Shared.Contract.SuperHero;
 using System.Net;
 using System.Net.Mime;
@@ -25,11 +26,7 @@ public static class SuperHeroEndpoint
             .WithTags(Shared.Route.API.SuperHeroEndpoint.TAG_NAME);
     }
 
-    private static async Task<IResult> GetPaginated(
-        int currentPage,
-        int pageSize,
-        IMediator mediator,
-        CancellationToken token = default)
+    private static async Task<IResult> GetPaginated(int currentPage, int pageSize, [FromServices] IMediator mediator, CancellationToken token = default)
     {
         var response = await mediator.Send(new GetSuperHeroQuery { CurrentPage = currentPage, PageSize = pageSize }, token);
         return Results.Ok(response);

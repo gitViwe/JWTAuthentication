@@ -141,7 +141,7 @@ internal class JWTTokenService : IJWTTokenService
     public void FlagAsUsedToken(string JwtId)
     {
         // verify that the JWT token is on the database
-        var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId);
+        var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId && !item.IsUsed);
         if (storedToken is null)
         {
             throw new UnauthorizedException("The token does not exist.");
@@ -155,7 +155,7 @@ internal class JWTTokenService : IJWTTokenService
     public void FlagAsRevokedToken(string JwtId)
     {
         // verify that the JWT token is on the database
-        var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId);
+        var storedToken = _dbContext.RefreshTokens.FirstOrDefault(item => item.JwtId == JwtId && !item.IsRevoked);
         if (storedToken is null)
         {
             throw new UnauthorizedException("The token does not exist.");

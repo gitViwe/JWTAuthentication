@@ -20,10 +20,10 @@ public static class API
     /// </summary>
     public static class AcccountEndpoint
     {
-        public const string PREFIX = "api/account/";
         public const string TAG_NAME = "Account";
-        public const string Register = "register";
-        public const string Login = "login";
-        public const string RefreshToken = "refresh-token";
+        public const string Register = "api/account/register";
+        public const string Login = "api/account/login";
+        public const string Logout = "api/account/logout";
+        public const string RefreshToken = "api/account/refresh-token";
     }
 }

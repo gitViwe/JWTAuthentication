@@ -33,4 +33,12 @@ public interface IHubIdentityService
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
     Task<TokenResponse> LoginUserAsync(LoginRequest request, CancellationToken token);
+
+    /// <summary>
+    /// Logout the current system user
+    /// </summary>
+    /// <param name="tokenId">The current user's JWT token id</param>
+    /// <param name="token">Propagates notification that operations should be canceled</param>
+    /// <exception cref="UnauthorizedException"></exception>
+    Task LogoutUserAsync(string tokenId, CancellationToken token);
 }

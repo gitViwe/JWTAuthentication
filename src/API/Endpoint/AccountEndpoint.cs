@@ -1,7 +1,10 @@
 ﻿using Application.Feature.Identity.LoginUser;
+using Application.Feature.Identity.LogoutUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
+using gitViwe.Shared.Extension;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Shared.Contract.Identity;
 using System.Net.Mime;
 
@@ -17,61 +20,58 @@ public static class AccountEndpoint
     /// </summary>
     internal static void MapAccountEndpoint(this IEndpointRouteBuilder app)
     {
-        var endpointGroup = app.MapGroup(Shared.Route.API.AcccountEndpoint.PREFIX)
+        app.MapPost(Shared.Route.API.AcccountEndpoint.Register, RegisterAsync)
             .AllowAnonymous()
-            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME);
-
-        endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.Register, Register)
-            .WithName(nameof(Register))
+            .WithName(nameof(RegisterAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json");
 
-        endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.Login, Login)
-            .WithName(nameof(Login))
+        app.MapPost(Shared.Route.API.AcccountEndpoint.Login, LoginAsync)
+            .AllowAnonymous()
+            .WithName(nameof(LoginAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json");
 
-        endpointGroup.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshToken)
-            .WithName(nameof(RefreshToken))
+        app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshTokenAsync)
+            .AllowAnonymous()
+            .WithName(nameof(RefreshTokenAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json");
+
+        app.MapPost(Shared.Route.API.AcccountEndpoint.Logout, LogoutAsync)
+            .WithName(nameof(LogoutAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json");
     }
 
-    private static async Task<IResult> Register(
-        RegisterRequest request,
-        IMediator mediator,
-        CancellationToken token = default)
+    private static async Task<IResult> RegisterAsync(RegisterRequest request, [FromServices] IMediator mediator, CancellationToken token = default)
     {
-        var command = new RegisterUserCommand
+        return Results.Ok(await mediator.Send(new RegisterUserCommand
         {
             Email = request.Email,
             Password = request.Password,
             PasswordConfirmation = request.PasswordConfirmation,
             UserName = request.UserName
-        };
-        return Results.Ok(await mediator.Send(command, token));
+        }, token));
     }
 
-    private static async Task<IResult> Login(
-        LoginRequest request,
-        IMediator mediator,
-        CancellationToken token = default)
+    private static async Task<IResult> LoginAsync(LoginRequest request, [FromServices] IMediator mediator, CancellationToken token = default)
     {
-        var command = new LoginUserCommand
+        return Results.Ok(await mediator.Send(new LoginUserCommand
         {
             Email = request.Email,
             Password = request.Password,
-        };
-        return Results.Ok(await mediator.Send(command, token));
+        }, token));
     }
 
-    private static async Task<IResult> RefreshToken(
-        TokenRequest request,
-        IMediator mediator,
-        CancellationToken token = default)
+    private static async Task<IResult> RefreshTokenAsync(TokenRequest request, [FromServices] IMediator mediator, CancellationToken token = default)
     {
         var command = new RefreshTokenCommand()
         {
@@ -79,5 +79,12 @@ public static class AccountEndpoint
             Token = request.Token,
         };
         return Results.Ok(await mediator.Send(command, token));
+    }
+
+    private static async Task<IResult> LogoutAsync([FromServices] IHttpContextAccessor contextAccessor, [FromServices] IMediator mediator, CancellationToken token = default)
+    {
+        string tokenId = contextAccessor.HttpContext?.User.GetTokenID()!;
+        await mediator.Send(new LogoutCommand(tokenId), token);
+        return Results.Ok();
     }
 }

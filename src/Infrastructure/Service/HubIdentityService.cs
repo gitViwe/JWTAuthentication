@@ -2,6 +2,7 @@
 using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using Infrastructure.Persistance.Entity;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Shared.Constant;
 using Shared.Contract.Identity;
@@ -43,6 +44,12 @@ internal class HubIdentityService : IHubIdentityService
         }
 
         throw new UnauthorizedException($"Login attempt failed for email {request.Email}", "Login details invalid.");
+    }
+
+    public Task LogoutUserAsync(string tokenId, CancellationToken token)
+    {
+        _tokenService.FlagAsRevokedToken(tokenId);
+        return Task.CompletedTask;
     }
 
     public async Task<TokenResponse> RefreshToken(TokenRequest request, CancellationToken token)
