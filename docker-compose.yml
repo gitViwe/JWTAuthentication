@@ -17,8 +17,8 @@ services:
     restart: on-failure
 
   postgres:
-    image: "postgres:13-alpine"
-    hostname: "postgres"
+    image: postgres:13-alpine
+    hostname: postgres
     container_name: postgres
     ports:
       - "5432:5432"
