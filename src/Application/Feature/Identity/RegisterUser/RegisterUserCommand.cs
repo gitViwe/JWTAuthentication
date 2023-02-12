@@ -2,9 +2,9 @@
 
 namespace Application.Feature.Identity.RegisterUser;
 
-public class RegisterUserCommand : RegisterRequest, IRequest<TokenResponse> { }
+public class RegisterUserCommand : RegisterRequest, IRequest<ITokenResponse> { }
 
-internal class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, TokenResponse>
+internal class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, ITokenResponse>
 {
     private readonly IHubIdentityService _hubIdentity;
 
@@ -13,7 +13,7 @@ internal class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand,
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<TokenResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<ITokenResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         return await _hubIdentity.RegisterAsync(request, cancellationToken);
     }

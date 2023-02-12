@@ -1,6 +1,8 @@
-﻿namespace Shared.Contract.Identity;
+﻿using gitViwe.Shared;
 
-public class RegisterRequest
+namespace Shared.Contract.Identity;
+
+public class RegisterRequest : IRegisterRequest
 {
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

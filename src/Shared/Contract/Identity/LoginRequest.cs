@@ -1,6 +1,8 @@
-﻿namespace Shared.Contract.Identity;
+﻿using gitViwe.Shared;
 
-public class LoginRequest
+namespace Shared.Contract.Identity;
+
+public class LoginRequest : ILoginRequest
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

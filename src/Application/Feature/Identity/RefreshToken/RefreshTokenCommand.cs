@@ -2,9 +2,9 @@
 
 namespace Application.Feature.Identity.RefreshToken;
 
-public class RefreshTokenCommand : TokenRequest, IRequest<TokenResponse> { }
+public class RefreshTokenCommand : TokenRequest, IRequest<ITokenResponse> { }
 
-internal class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, TokenResponse>
+internal class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, ITokenResponse>
 {
     private readonly IHubIdentityService _hubIdentity;
 
@@ -13,7 +13,7 @@ internal class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand,
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<TokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public async Task<ITokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         return await _hubIdentity.RefreshToken(request, cancellationToken);
     }

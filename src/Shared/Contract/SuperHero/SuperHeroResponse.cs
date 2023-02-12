@@ -89,16 +89,16 @@ public class Connections
 public class Images
 {
     [JsonPropertyName("xs")]
-    public Uri Xs { get; set; }
+    public string Xs { get; set; } = string.Empty;
 
     [JsonPropertyName("sm")]
-    public Uri Sm { get; set; }
+    public string Sm { get; set; } = string.Empty;
 
     [JsonPropertyName("md")]
-    public Uri Md { get; set; }
+    public string Md { get; set; } = string.Empty;
 
     [JsonPropertyName("lg")]
-    public Uri Lg { get; set; }
+    public string Lg { get; set; } = string.Empty;
 }
 
 public class Powerstats

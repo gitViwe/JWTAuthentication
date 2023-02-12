@@ -38,7 +38,7 @@ internal class JWTTokenService : IJWTTokenService
         _contextAccessor = contextAccessor;
     }
 
-    public TokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal)
+    public ITokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal)
     {
         // create token handler object
         var handler = new JwtSecurityTokenHandler();
@@ -66,7 +66,7 @@ internal class JWTTokenService : IJWTTokenService
             UserId = claimsPrincipal.GetUserId(),
             AddedDate = DateTime.UtcNow,
             ExpiryDate = DateTime.UtcNow.AddMinutes(_configuration.RefreshTokenExpityInMinutes),
-            Token = Conversion.RandomString(65)
+            Token = Generator.RandomString(length: 65)
         };
         // save to database
         _dbContext.RefreshTokens.Add(refreshToken);
@@ -79,7 +79,7 @@ internal class JWTTokenService : IJWTTokenService
         };
     }
 
-    public ClaimsPrincipal ValidateToken(TokenRequest request, bool isRefreshToken = false)
+    public ClaimsPrincipal ValidateToken(ITokenRequest request, bool isRefreshToken = false)
     {
         var handler = new JwtSecurityTokenHandler();
         try

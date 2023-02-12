@@ -26,7 +26,7 @@ internal class HubIdentityService : IHubIdentityService
         _tokenService = tokenService;
     }
 
-    public async Task<TokenResponse> LoginUserAsync(LoginRequest request, CancellationToken token)
+    public async Task<ITokenResponse> LoginUserAsync(ILoginRequest request, CancellationToken token)
     {
         // verify if email is registered
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
@@ -52,7 +52,7 @@ internal class HubIdentityService : IHubIdentityService
         return Task.CompletedTask;
     }
 
-    public async Task<TokenResponse> RefreshToken(TokenRequest request, CancellationToken token)
+    public async Task<ITokenResponse> RefreshToken(ITokenRequest request, CancellationToken token)
     {
         var claimsPrincipal = _tokenService.ValidateToken(request, isRefreshToken: true);
 
@@ -73,7 +73,7 @@ internal class HubIdentityService : IHubIdentityService
         throw new UnauthorizedException($"Token refresh failed for tokenId: {claimsPrincipal.GetTokenID()}", "Token refresh failed, please login again.");
     }
 
-    public async Task<TokenResponse> RegisterAsync(RegisterRequest request, CancellationToken token)
+    public async Task<ITokenResponse> RegisterAsync(IRegisterRequest request, CancellationToken token)
     {
         // verify if email is already registered
         if (await _userManager.FindByEmailAsync(request.Email) is not null)

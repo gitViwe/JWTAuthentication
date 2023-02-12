@@ -1,6 +1,8 @@
-﻿namespace Shared.Contract.Identity;
+﻿using gitViwe.Shared;
 
-public class TokenRequest
+namespace Shared.Contract.Identity;
+
+public class TokenRequest : ITokenRequest
 {
     public string Token { get; init; } = string.Empty;
     public string RefreshToken { get; init; } = string.Empty;
