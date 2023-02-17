@@ -1,5 +1,4 @@
-﻿
-namespace Application.Common.Behaviour;
+﻿namespace Application.Common.Behaviour;
 
 internal class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
@@ -13,15 +12,18 @@ internal class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        if (_validators.Any())
+        if (_validators is not null && _validators.Any())
         {
             var context = new ValidationContext<TRequest>(request);
 
             var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken)));
 
-            var failure = validationResults.Where(result => result.IsValid == false).FirstOrDefault();
+            if (validationResults is not null)
+            {
+                var failure = validationResults.Where(result => result.IsValid == false).FirstOrDefault();
 
-            if (failure is not null) throw new gitViwe.Shared.ValidationException(failure.ToDictionary());
+                if (failure is not null) throw new gitViwe.Shared.ValidationException(failure.ToDictionary());
+            }
         }
         return await next();
     }

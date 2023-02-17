@@ -22,7 +22,7 @@ internal class SuperHeroService : ISuperHeroService
         var filePath = Path.Combine(_environment.WebRootPath, HERO_JSON_FILE);
         var jsonString = await File.ReadAllTextAsync(filePath, token);
         var output = JsonSerializer.Deserialize<IEnumerable<SuperHeroResponse>>(jsonString);
-        return output ?? Array.Empty<SuperHeroResponse>();
+        return output ?? Enumerable.Empty<SuperHeroResponse>();
     }
 
     public async Task<PaginatedResponse<SuperHeroResponse>> GetPaginatedAsync(PaginatedRequest request, CancellationToken token)
@@ -35,6 +35,6 @@ internal class SuperHeroService : ISuperHeroService
             return PaginatedResponse<SuperHeroResponse>.Success(data, output.Count(), request.CurrentPage, request.PageSize);
         }
 
-        return PaginatedResponse<SuperHeroResponse>.Failure("No heroes located.");
+        return PaginatedResponse<SuperHeroResponse>.Success(Enumerable.Empty<SuperHeroResponse>(), 0, 1, request.PageSize);
     }
 }

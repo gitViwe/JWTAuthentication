@@ -3,7 +3,9 @@ using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using Infrastructure.Persistance.Entity;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Shared.Constant;
 using Shared.Contract.Identity;
 using System.Security.Claims;
@@ -15,18 +17,21 @@ internal class HubIdentityService : IHubIdentityService
     private readonly IUserClaimsPrincipalFactory<HubIdentityUser> _claimsPrincipalFactory;
     private readonly UserManager<HubIdentityUser> _userManager;
     private readonly IJWTTokenService _tokenService;
+    private readonly ILogger<HubIdentityService> _logger;
 
     public HubIdentityService(
         IUserClaimsPrincipalFactory<HubIdentityUser> claimsPrincipalFactory,
         UserManager<HubIdentityUser> userManager,
-        IJWTTokenService tokenService)
+        IJWTTokenService tokenService,
+        ILogger<HubIdentityService> logger)
     {
         _claimsPrincipalFactory = claimsPrincipalFactory;
         _userManager = userManager;
         _tokenService = tokenService;
+        _logger = logger;
     }
 
-    public async Task<ITokenResponse> LoginUserAsync(ILoginRequest request, CancellationToken token)
+    public async Task<IResponse> LoginUserAsync(ILoginRequest request, CancellationToken token)
     {
         // verify if email is registered
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
@@ -39,11 +44,11 @@ internal class HubIdentityService : IHubIdentityService
                 // get claims principal from user
                 var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
                 // create JWT token
-                return _tokenService.GenerateToken(claimsPrincipal);
+                return Response<TokenResponse>.Success("Login successful.", _tokenService.GenerateToken(claimsPrincipal));
             }
         }
 
-        throw new UnauthorizedException($"Login attempt failed for email {request.Email}", "Login details invalid.");
+        return Response.Fail("Login details invalid.", StatusCodes.Status401Unauthorized);
     }
 
     public Task LogoutUserAsync(string tokenId, CancellationToken token)
@@ -52,7 +57,7 @@ internal class HubIdentityService : IHubIdentityService
         return Task.CompletedTask;
     }
 
-    public async Task<ITokenResponse> RefreshToken(ITokenRequest request, CancellationToken token)
+    public async Task<IResponse> RefreshToken(ITokenRequest request, CancellationToken token)
     {
         var claimsPrincipal = _tokenService.ValidateToken(request, isRefreshToken: true);
 
@@ -67,18 +72,18 @@ internal class HubIdentityService : IHubIdentityService
             // get claims principal from user
             claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
             // create JWT token
-            return _tokenService.GenerateToken(claimsPrincipal);
+            return Response<TokenResponse>.Success("Token refresh successful.", _tokenService.GenerateToken(claimsPrincipal));
         }
 
-        throw new UnauthorizedException($"Token refresh failed for tokenId: {claimsPrincipal.GetTokenID()}", "Token refresh failed, please login again.");
+        return Response.Fail("Token refresh failed, please login again.", StatusCodes.Status401Unauthorized);
     }
 
-    public async Task<ITokenResponse> RegisterAsync(IRegisterRequest request, CancellationToken token)
+    public async Task<IResponse> RegisterAsync(IRegisterRequest request, CancellationToken token)
     {
         // verify if email is already registered
         if (await _userManager.FindByEmailAsync(request.Email) is not null)
         {
-            throw new UnauthorizedException($"Registration attempt with existing email: {request.Email}", "This email is already registered.");
+            return Response.Fail("This email is already registered.", StatusCodes.Status401Unauthorized);
         }
         // create identity user object
         var newUser = new HubIdentityUser { Email = request.Email, UserName = request.UserName };
@@ -92,9 +97,10 @@ internal class HubIdentityService : IHubIdentityService
             // get claims principal from user
             var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(newUser);
             // create JWT token
-            return _tokenService.GenerateToken(claimsPrincipal);
+            return Response<TokenResponse>.Success("Registration successful.", _tokenService.GenerateToken(claimsPrincipal));
         }
-        // errors that occurred during user registration
-        throw new UnauthorizedException($"Registration attempt failed with result: {result}", "Unable to create your account at this time.");
+
+        _logger.LogWarning("Registration attempt failed with result: {result}", result);
+        return Response.Fail("Unable to create your account at this time.", StatusCodes.Status401Unauthorized);
     }
 }

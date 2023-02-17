@@ -11,10 +11,8 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand>
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<Unit> Handle(LogoutCommand request, CancellationToken cancellationToken)
+    public Task Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
-        await _hubIdentity.LogoutUserAsync(request.TokenId, cancellationToken);
-
-        return Unit.Value;
+        return _hubIdentity.LogoutUserAsync(request.TokenId, cancellationToken);
     }
 }

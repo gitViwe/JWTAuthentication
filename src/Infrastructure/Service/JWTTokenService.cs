@@ -38,7 +38,7 @@ internal class JWTTokenService : IJWTTokenService
         _contextAccessor = contextAccessor;
     }
 
-    public ITokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal)
+    public TokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal)
     {
         // create token handler object
         var handler = new JwtSecurityTokenHandler();

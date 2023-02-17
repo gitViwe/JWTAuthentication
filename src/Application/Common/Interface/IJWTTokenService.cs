@@ -13,7 +13,7 @@ public interface IJWTTokenService
     /// </summary>
     /// <param name="claimsPrincipal">The claims principal of the current user</param>
     /// <returns>A <see cref="TokenResponse"/> with the JWT token and refresh token</returns>
-    ITokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal);
+    TokenResponse GenerateToken(ClaimsPrincipal claimsPrincipal);
 
     /// <summary>
     /// Validates the JWT token and refresh token

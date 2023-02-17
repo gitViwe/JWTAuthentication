@@ -2,6 +2,7 @@
 using Application.Feature.Identity.LogoutUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
+using gitViwe.ProblemDetail;
 using gitViwe.Shared.Extension;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -51,39 +52,65 @@ public static class AccountEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json");
     }
 
-    private static async Task<IResult> RegisterAsync(RegisterRequest request, [FromServices] IMediator mediator, CancellationToken token = default)
+    private static async Task<IResult> RegisterAsync(
+        RegisterRequest request,
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
     {
-        return Results.Ok(await mediator.Send(new RegisterUserCommand
+        var response = await mediator.Send(new RegisterUserCommand
         {
             Email = request.Email,
             Password = request.Password,
             PasswordConfirmation = request.PasswordConfirmation,
             UserName = request.UserName
-        }, token));
+        }, token);
+
+        return response.Succeeded()
+            ? Results.Ok()
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
     }
 
-    private static async Task<IResult> LoginAsync(LoginRequest request, [FromServices] IMediator mediator, CancellationToken token = default)
+    private static async Task<IResult> LoginAsync(
+        LoginRequest request,
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
     {
-        return Results.Ok(await mediator.Send(new LoginUserCommand
+        var response = await mediator.Send(new LoginUserCommand
         {
             Email = request.Email,
             Password = request.Password,
-        }, token));
+        }, token);
+
+        return response.Succeeded()
+            ? Results.Ok()
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
     }
 
-    private static async Task<IResult> RefreshTokenAsync(TokenRequest request, [FromServices] IMediator mediator, CancellationToken token = default)
+    private static async Task<IResult> RefreshTokenAsync(
+        TokenRequest request,
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
     {
-        var command = new RefreshTokenCommand()
+        var response = await mediator.Send(new RefreshTokenCommand()
         {
             RefreshToken = request.RefreshToken,
             Token = request.Token,
-        };
-        return Results.Ok(await mediator.Send(command, token));
+        }, token);
+
+        return response.Succeeded()
+            ? Results.Ok()
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
     }
 
-    private static async Task<IResult> LogoutAsync([FromServices] IHttpContextAccessor contextAccessor, [FromServices] IMediator mediator, CancellationToken token = default)
+    private static async Task<IResult> LogoutAsync(
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
     {
-        string tokenId = contextAccessor.HttpContext?.User.GetTokenID()!;
+        string tokenId = accessor.HttpContext?.User.GetTokenID()!;
         await mediator.Send(new LogoutCommand(tokenId), token);
         return Results.Ok();
     }
