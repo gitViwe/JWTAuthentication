@@ -11,8 +11,7 @@ public static class API
     public static class SuperHeroEndpoint
     {
         public const string TAG_NAME = "Superhero";
-        public const string GetPaginated = "api/superhero/{currentPage:required}&{pageSize:required}";
-        public static string GetPaginatedEndpoint(int currentPage, int pageSize) => $"api/superhero/{currentPage}&{pageSize}";
+        public const string GetPaginated = "api/superhero";
     }
 
     /// <summary>

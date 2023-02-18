@@ -1,5 +1,6 @@
 ﻿using Application.Common.Interface;
 using gitViwe.ProblemDetail;
+using gitViwe.ProblemDetail.Base;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.Entity;
@@ -83,6 +84,8 @@ internal static class ServiceCollectionExtension
             IssuerSigningKey = new SymmetricSecurityKey(key),
             // validates the signature of the key
             ValidateIssuerSigningKey = true,
+            ValidateAudience = true,
+            ValidateIssuer = true,
         };
 
         // add Token Validation Parameters as singleton service
@@ -101,6 +104,8 @@ internal static class ServiceCollectionExtension
             IssuerSigningKey = new SymmetricSecurityKey(key),
             // validates the signature of the key
             ValidateIssuerSigningKey = true,
+            ValidateAudience = true,
+            ValidateIssuer = true,
             // do not validate token expiry
             ValidateLifetime = false,
         };
@@ -124,14 +129,12 @@ internal static class ServiceCollectionExtension
             {
                 OnAuthenticationFailed = context =>
                 {
-                    int statusCode = StatusCodes.Status401Unauthorized;
-                    var response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, statusCode);
+                    DefaultProblemDetails response;
 
                     // JWT token has expired
-                    if (context.Exception is SecurityTokenExpiredException)
-                    {
-                        response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, statusCode, ErrorDescription.Authorization.ExpiredToken);
-                    }
+                    response = context.Exception is SecurityTokenExpiredException
+                        ? ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status401Unauthorized, ErrorDescription.Authorization.ExpiredToken)
+                        : ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status401Unauthorized);
 
                     return context.Response.WriteAsync(JsonSerializer.Serialize(response));
                 },

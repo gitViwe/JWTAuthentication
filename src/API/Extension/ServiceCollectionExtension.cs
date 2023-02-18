@@ -14,7 +14,7 @@ internal static class ServiceCollectionExtension
             // add swagger documentation
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "Hub API",
+                Title = "JWT API",
                 Description = "A .NET 7 Web API demo project to showcase Minimal API, Clean Architecture, JSON Web Token authentication and Swagger / Open API documentation.",
                 Version = "v1.0",
                 Contact = new OpenApiContact()

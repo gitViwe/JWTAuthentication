@@ -26,9 +26,13 @@ public static class SuperHeroEndpoint
             .WithTags(Shared.Route.API.SuperHeroEndpoint.TAG_NAME);
     }
 
-    private static async Task<IResult> GetPaginated(int currentPage, int pageSize, [FromServices] IMediator mediator, CancellationToken token = default)
+    private static async Task<IResult> GetPaginated(
+        [FromServices] IMediator mediator,
+        [FromQuery] int CurrentPage = 1,
+        [FromQuery] int PageSize = 15,
+        CancellationToken token = default)
     {
-        var response = await mediator.Send(new GetSuperHeroQuery { CurrentPage = currentPage, PageSize = pageSize }, token);
+        var response = await mediator.Send(new GetSuperHeroQuery { CurrentPage = CurrentPage, PageSize = PageSize }, token);
         return Results.Ok(response);
     }
 }
