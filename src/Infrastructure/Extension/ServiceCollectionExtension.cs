@@ -33,7 +33,7 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
+    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         if (environment.IsEnvironment("Docker"))
         {
@@ -66,7 +66,7 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterAuthentication(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterAuthentication(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         // get the JWT key from the APP settings file
         var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
@@ -84,8 +84,8 @@ internal static class ServiceCollectionExtension
             IssuerSigningKey = new SymmetricSecurityKey(key),
             // validates the signature of the key
             ValidateIssuerSigningKey = true,
-            ValidateAudience = true,
-            ValidateIssuer = true,
+            ValidateAudience = environment.IsProduction(),
+            ValidateIssuer = environment.IsProduction(),
         };
 
         // add Token Validation Parameters as singleton service
@@ -104,8 +104,8 @@ internal static class ServiceCollectionExtension
             IssuerSigningKey = new SymmetricSecurityKey(key),
             // validates the signature of the key
             ValidateIssuerSigningKey = true,
-            ValidateAudience = true,
-            ValidateIssuer = true,
+            ValidateAudience = environment.IsProduction(),
+            ValidateIssuer = environment.IsProduction(),
             // do not validate token expiry
             ValidateLifetime = false,
         };

@@ -23,12 +23,11 @@ Things you need to use the software and how to install them.
    ```
 2. Run via Docker
    ```
-   cd jwtauthentication
    docker compose up -d
    ```
 3. Build and run the API
    ```
-   cd jwtauthentication/src/api
+   cd src/api
    dotnet run
    ```
 
