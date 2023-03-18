@@ -22,7 +22,7 @@ public interface IJWTTokenService
     /// <param name="isRefreshToken">Determines if the request is for a refresh token</param>
     /// <returns>The <see cref="ClaimsPrincipal"/> from the validate token</returns>
     /// <exception cref="UnauthorizedException"></exception>
-    ClaimsPrincipal ValidateToken(ITokenRequest request, bool isRefreshToken = false);
+    ClaimsPrincipal ValidateToken(TokenRequest request, bool isRefreshToken = false);
 
     /// <summary>
     /// Updated the used flag of the refresh token

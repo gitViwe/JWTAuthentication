@@ -3,7 +3,6 @@ using Application.Feature.Identity.LogoutUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
 using gitViwe.ProblemDetail;
-using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +25,7 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName(nameof(RegisterAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<IResponse<TokenResponse>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json");
 
@@ -34,7 +33,7 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName(nameof(LoginAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<IResponse<TokenResponse>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json");
 
@@ -42,7 +41,7 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName(nameof(RefreshTokenAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<IResponse<TokenResponse>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json");
 
@@ -67,8 +66,8 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded()
-            ? Results.Ok(response)
-            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
     private static async Task<IResult> LoginAsync(
@@ -84,8 +83,8 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded()
-            ? Results.Ok(response)
-            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
     private static async Task<IResult> RefreshTokenAsync(
@@ -101,8 +100,8 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded()
-            ? Results.Ok(response)
-            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
     private static async Task<IResult> LogoutAsync(

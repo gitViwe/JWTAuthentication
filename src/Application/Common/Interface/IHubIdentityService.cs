@@ -14,7 +14,7 @@ public interface IHubIdentityService
     /// <param name="token">Propagates notification that operations should be canceled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> RegisterAsync(IRegisterRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> RegisterAsync(RegisterRequest request, CancellationToken token);
 
     /// <summary>
     /// Request a new token if the current token is invalid or expired
@@ -23,7 +23,7 @@ public interface IHubIdentityService
     /// <param name="token">Propagates notification that operations should be canceled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> RefreshToken(ITokenRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> RefreshToken(TokenRequest request, CancellationToken token);
 
     /// <summary>
     /// Login an existing system user
@@ -32,7 +32,7 @@ public interface IHubIdentityService
     /// /// <param name="token">Propagates notification that operations should be canceled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> LoginUserAsync(ILoginRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken token);
 
     /// <summary>
     /// Logout the current system user

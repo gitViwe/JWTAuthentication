@@ -59,7 +59,7 @@ internal static class ServiceCollectionExtension
 
             // get the file path for XML documentation
             var fileName = Assembly.GetEntryAssembly()!.GetName().Name + ".xml";
-            var xmlCommentsFilePath = System.IO.Path.Combine(AppContext.BaseDirectory, fileName);
+            var xmlCommentsFilePath = Path.Combine(AppContext.BaseDirectory, fileName);
             // add XML documentation to swagger UI
             options.IncludeXmlComments(xmlCommentsFilePath, true);
         });
