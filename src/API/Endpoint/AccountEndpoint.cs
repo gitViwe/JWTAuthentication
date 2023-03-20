@@ -27,7 +27,12 @@ public static class AccountEndpoint
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
-            .ProducesValidationProblem(contentType: "application/problem+json");
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Register a new user.",
+                Description = "Provide a new email and password to create the account.",
+            });
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.Login, LoginAsync)
             .AllowAnonymous()
@@ -35,7 +40,12 @@ public static class AccountEndpoint
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
-            .ProducesValidationProblem(contentType: "application/problem+json");
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Login an existing user.",
+                Description = "Provide an email and password to get a JSON web token for this user.",
+            });
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshTokenAsync)
             .AllowAnonymous()
@@ -43,12 +53,22 @@ public static class AccountEndpoint
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
-            .ProducesValidationProblem(contentType: "application/problem+json");
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Refresh JSON web token for an existing user.",
+                Description = "Provide a token and refresh token to get a new JSON web token for this user.",
+            });
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.Logout, LogoutAsync)
             .WithName(nameof(LogoutAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json");
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Invalidate JSON web token for an existing user.",
+                Description = "Flags the new JSON web token for this user as used and revoked.",
+            });
     }
 
     private static async Task<IResult> RegisterAsync(

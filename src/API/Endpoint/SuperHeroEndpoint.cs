@@ -16,14 +16,19 @@ public static class SuperHeroEndpoint
     /// <summary>
     /// Maps the API endpoints for the SuperHeroService
     /// </summary>
-    internal static void MapSuperHeroEndpoint(this IEndpointRouteBuilder app)
+    internal static void MapSuperHeroEndpoint(this IEndpointRouteBuilder app, IConfiguration configuration)
     {
         app.MapGet(Shared.Route.API.SuperHeroEndpoint.GetPaginated, GetPaginated)
             .WithName(nameof(GetPaginated))
+            .WithTags(Shared.Route.API.SuperHeroEndpoint.TAG_NAME)
             .Produces<PaginatedResponse<SuperHeroResponse>>((int)HttpStatusCode.OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json")
-            .WithTags(Shared.Route.API.SuperHeroEndpoint.TAG_NAME);
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Get a list of super hero models.",
+                Description = "Gets a paginated list of super hero models based on the query parameters.",
+            });
     }
 
     private static async Task<IResult> GetPaginated(
