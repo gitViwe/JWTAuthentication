@@ -29,12 +29,8 @@ internal class SuperHeroService : ISuperHeroService
     {
         var output = await GetEnumerableAsync(token);
 
-        if (output.Any())
-        {
-            var data = output.Skip((request.CurrentPage - 1) * request.PageSize).Take(request.PageSize).ToList();
-            return PaginatedResponse<SuperHeroResponse>.Success(data, output.Count(), request.CurrentPage, request.PageSize);
-        }
-
-        return PaginatedResponse<SuperHeroResponse>.Success(Enumerable.Empty<SuperHeroResponse>(), 0, 1, request.PageSize);
+        return output.Any()
+            ? PaginatedResponse<SuperHeroResponse>.Success(output, request.CurrentPage, request.PageSize)
+            : PaginatedResponse<SuperHeroResponse>.Fail();
     }
 }
