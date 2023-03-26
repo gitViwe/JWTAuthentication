@@ -15,9 +15,9 @@ namespace Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.4");
 
-            modelBuilder.Entity("Infrastructure.Identity.HubIdentityRole", b =>
+            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityRole", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -40,7 +40,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("Infrastructure.Identity.HubIdentityUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -64,9 +64,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -96,6 +93,10 @@ namespace Infrastructure.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("TOTPKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("INTEGER");
 
@@ -107,7 +108,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Identity.RefreshToken", b =>
+            modelBuilder.Entity("Infrastructure.Persistance.Entity.RefreshToken", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -202,12 +203,14 @@ namespace Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LoginProvider")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderKey")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("UserId");
@@ -241,9 +244,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LoginProvider")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -254,10 +259,10 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserTokens");
                 });
 
-            modelBuilder.Entity("Infrastructure.Identity.RefreshToken", b =>
+            modelBuilder.Entity("Infrastructure.Persistance.Entity.RefreshToken", b =>
                 {
-                    b.HasOne("Infrastructure.Identity.HubIdentityUser", "User")
-                        .WithMany()
+                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", "User")
+                        .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -267,42 +272,44 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Identity.HubIdentityRole", null)
+                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityRole", null)
                         .WithMany("RoleClaims")
                         .HasForeignKey("HubIdentityRoleId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Identity.HubIdentityUser", null)
+                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", null)
                         .WithMany("Claims")
                         .HasForeignKey("HubIdentityUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Identity.HubIdentityUser", null)
+                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", null)
                         .WithMany("Logins")
                         .HasForeignKey("HubIdentityUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Identity.HubIdentityUser", null)
+                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", null)
                         .WithMany("Roles")
                         .HasForeignKey("HubIdentityUserId");
                 });
 
-            modelBuilder.Entity("Infrastructure.Identity.HubIdentityRole", b =>
+            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityRole", b =>
                 {
                     b.Navigation("RoleClaims");
                 });
 
-            modelBuilder.Entity("Infrastructure.Identity.HubIdentityUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityUser", b =>
                 {
                     b.Navigation("Claims");
 
                     b.Navigation("Logins");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("Roles");
                 });

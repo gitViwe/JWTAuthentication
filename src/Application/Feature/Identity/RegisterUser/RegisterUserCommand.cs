@@ -13,8 +13,8 @@ internal class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand,
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<IResponse<TokenResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public Task<IResponse<TokenResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        return await _hubIdentity.RegisterAsync(request, cancellationToken);
+        return _hubIdentity.RegisterAsync(request, cancellationToken);
     }
 }

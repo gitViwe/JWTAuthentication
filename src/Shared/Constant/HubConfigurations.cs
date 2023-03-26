@@ -10,6 +10,7 @@ public static class HubConfigurations
     /// </summary>
     public static class API
     {
+        public const string ApplicationName = "APIConfiguration:ApplicationName";
         public const string Secret = "APIConfiguration:Secret";
         public const string ClientUrl = "APIConfiguration:ClientUrl";
         public const string ServerUrl = "APIConfiguration:ServerUrl";

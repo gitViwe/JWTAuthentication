@@ -1,10 +1,14 @@
 ﻿using Application.Common.Interface;
+using Application.Configuration;
 using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using Infrastructure.Persistance.Entity;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using OtpNet;
 using Shared.Constant;
 using Shared.Contract.Identity;
 using System.Security.Claims;
@@ -16,18 +20,65 @@ internal class HubIdentityService : IHubIdentityService
     private readonly IUserClaimsPrincipalFactory<HubIdentityUser> _claimsPrincipalFactory;
     private readonly UserManager<HubIdentityUser> _userManager;
     private readonly IJWTTokenService _tokenService;
+    private readonly ITOTPService _tOTPService;
+    private readonly APIConfiguration _configuration;
     private readonly ILogger<HubIdentityService> _logger;
 
     public HubIdentityService(
         IUserClaimsPrincipalFactory<HubIdentityUser> claimsPrincipalFactory,
         UserManager<HubIdentityUser> userManager,
         IJWTTokenService tokenService,
+        ITOTPService tOTPService,
+        IOptionsMonitor<APIConfiguration> optionsMonitor,
         ILogger<HubIdentityService> logger)
     {
         _claimsPrincipalFactory = claimsPrincipalFactory;
         _userManager = userManager;
         _tokenService = tokenService;
+        _tOTPService = tOTPService;
+        _configuration = optionsMonitor.CurrentValue;
         _logger = logger;
+    }
+
+    public async Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken token)
+    {
+        var user = await _userManager.FindByIdAsync(request.UserId)
+            ?? throw new UnauthorizedException($"User with Id: [{request.UserId}] does not exist.");
+
+        // Generate a random secret key for the user.
+        var secretKey = KeyGeneration.GenerateRandomKey(32);
+        user.TOTPKey = Base32Encoding.ToString(secretKey);
+        await _userManager.UpdateAsync(user);
+
+        var response = new QrCodeImageResponse() { QrCodeImage = _tOTPService.GenerateQrCode(request.UserEmail, secretKey, _configuration.ApplicationName) };
+
+        return Response<QrCodeImageResponse>.Success("QrCode created.", response);
+    }
+
+    public async Task<IResponse> ValidateTOTPAsync(string email, string totp, CancellationToken token)
+    {
+        var user = await _userManager.FindByEmailAsync(email)
+            ?? throw new UnauthorizedException($"User with Email: [{email}] does not exist.");
+
+        if (string.IsNullOrWhiteSpace(user.TOTPKey))
+        {
+            return Response.Fail("Invalid details.");
+        }
+
+        if (!_tOTPService.VerifyTOTP(Base32Encoding.ToBytes(user.TOTPKey), totp))
+        {
+            return Response.Fail("Invalid details.");
+        }
+
+        // get claims principal from user
+        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
+
+        if (!claimsPrincipal.HasClaim(HubClaimTypes.Permission, HubPermissions.Authentication.TOTP))
+        {
+            await _userManager.AddClaimAsync(user, new Claim(HubClaimTypes.Permission, HubPermissions.Authentication.TOTP));
+        }
+
+        return Response.Success("The TOTP has been verified successfully.");
     }
 
     public async Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken token)

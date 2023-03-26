@@ -1,7 +1,8 @@
 <!-- ABOUT THE PROJECT -->
 # JWT Authentication for HTTP APIs
 
-JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed.
+JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object.
+This information can be verified and trusted because it is digitally signed.
 
 <!-- GETTING STARTED -->
 ## Getting Started

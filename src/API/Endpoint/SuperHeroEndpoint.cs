@@ -16,7 +16,7 @@ public static class SuperHeroEndpoint
     /// <summary>
     /// Maps the API endpoints for the SuperHeroService
     /// </summary>
-    internal static void MapSuperHeroEndpoint(this IEndpointRouteBuilder app, IConfiguration configuration)
+    internal static void MapSuperHeroEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapGet(Shared.Route.API.SuperHeroEndpoint.GetPaginated, GetPaginated)
             .WithName(nameof(GetPaginated))

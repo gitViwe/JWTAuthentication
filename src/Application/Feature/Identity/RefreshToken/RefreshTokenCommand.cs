@@ -13,8 +13,8 @@ internal class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand,
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<IResponse<TokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public Task<IResponse<TokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        return await _hubIdentity.RefreshToken(request, cancellationToken);
+        return _hubIdentity.RefreshToken(request, cancellationToken);
     }
 }

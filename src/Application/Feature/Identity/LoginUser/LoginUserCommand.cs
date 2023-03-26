@@ -13,8 +13,8 @@ internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, IResp
         _hubIdentity = hubIdentity;
     }
 
-    public async Task<IResponse<TokenResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public Task<IResponse<TokenResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
-        return await _hubIdentity.LoginUserAsync(request, cancellationToken);
+        return _hubIdentity.LoginUserAsync(request, cancellationToken);
     }
 }
