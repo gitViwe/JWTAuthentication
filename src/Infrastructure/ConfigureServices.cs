@@ -21,15 +21,15 @@ public static class ConfigureServices
         return services;
     }
 
-    public static async Task UseInfrastructureServices(this IHost host, IHostEnvironment environment)
+    public static Task UseInfrastructureServicesAsync(this IHost host, IHostEnvironment environment)
     {
         if (environment.IsEnvironment("Docker"))
         {
-            await host.CreateDatabaseAsync();
+            return host.CreateDatabaseAsync();
         }
         else
         {
-            await host.ApplyMigrationAsync();
+            return host.ApplyMigrationAsync();
         }
     }
 }

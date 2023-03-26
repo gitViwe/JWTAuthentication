@@ -27,6 +27,7 @@ internal static class ServiceCollectionExtension
     internal static IServiceCollection RegisterServiceImplementation(this IServiceCollection services)
     {
         services.AddScoped<ISuperHeroService, SuperHeroService>();
+        services.AddTransient<ITOTPService, TOTPService>();
         services.AddTransient<IJWTTokenService, JWTTokenService>();
         services.AddTransient<IHubIdentityService, HubIdentityService>();
 

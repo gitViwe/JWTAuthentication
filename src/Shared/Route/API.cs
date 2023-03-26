@@ -24,5 +24,7 @@ public static class API
         public const string Login = "api/account/login";
         public const string Logout = "api/account/logout";
         public const string RefreshToken = "api/account/refresh-token";
+        public const string QrCode = "api/account/qrcode";
+        public const string TOTPVerify = "api/account/totp/verify";
     }
 }

@@ -13,8 +13,8 @@ internal class GetSuperHeroQueryHandler : IRequestHandler<GetSuperHeroQuery, Pag
         _heroService = heroService;
     }
 
-    public async Task<PaginatedResponse<SuperHeroResponse>> Handle(GetSuperHeroQuery request, CancellationToken cancellationToken)
+    public Task<PaginatedResponse<SuperHeroResponse>> Handle(GetSuperHeroQuery request, CancellationToken cancellationToken)
     {
-        return await _heroService.GetPaginatedAsync(request, cancellationToken);
+        return _heroService.GetPaginatedAsync(request, cancellationToken);
     }
 }

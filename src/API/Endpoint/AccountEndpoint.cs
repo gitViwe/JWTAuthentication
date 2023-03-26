@@ -2,8 +2,8 @@
 using Application.Feature.Identity.LogoutUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
+using Application.Feature.Identity.TOTPAuthenticator;
 using gitViwe.ProblemDetail;
-using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -26,30 +26,73 @@ public static class AccountEndpoint
             .AllowAnonymous()
             .WithName(nameof(RegisterAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<IResponse<TokenResponse>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
-            .ProducesValidationProblem(contentType: "application/problem+json");
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Register new user.",
+                Description = "Provide a new email and password to create the account.",
+            });
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.Login, LoginAsync)
             .AllowAnonymous()
             .WithName(nameof(LoginAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<IResponse<TokenResponse>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
-            .ProducesValidationProblem(contentType: "application/problem+json");
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Login existing user.",
+                Description = "Provide an email and password to get a JSON web token for this user.",
+            });
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.RefreshToken, RefreshTokenAsync)
             .AllowAnonymous()
             .WithName(nameof(RefreshTokenAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<IResponse<TokenResponse>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
+            .Produces<TokenResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
-            .ProducesValidationProblem(contentType: "application/problem+json");
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Refresh JWT for existing user.",
+                Description = "Provide a token and refresh token to get a new JSON web token for this user.",
+            });
 
         app.MapPost(Shared.Route.API.AcccountEndpoint.Logout, LogoutAsync)
             .WithName(nameof(LogoutAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json");
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Invalidate JWT.",
+                Description = "Flags the new JSON web token for this user as used and revoked.",
+            });
+
+        app.MapGet(Shared.Route.API.AcccountEndpoint.QrCode, GetQrCodeAsync)
+            .WithName(nameof(GetQrCodeAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
+            .Produces(StatusCodes.Status200OK, contentType: "image/png")
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Get QRCode.",
+                Description = "Get a QrCode image to scan and set up time-based one-time password (TOTP).",
+            });
+
+        app.MapPost(Shared.Route.API.AcccountEndpoint.TOTPVerify, VerifyTOTP)
+            .WithName(nameof(VerifyTOTP))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Verify TOTP.",
+                Description = "Verify the time-based one-time password (TOTP).",
+            });
     }
 
     private static async Task<IResult> RegisterAsync(
@@ -67,8 +110,8 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded()
-            ? Results.Ok(response)
-            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
     private static async Task<IResult> LoginAsync(
@@ -84,8 +127,8 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded()
-            ? Results.Ok(response)
-            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
     private static async Task<IResult> RefreshTokenAsync(
@@ -101,8 +144,8 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded()
-            ? Results.Ok(response)
-            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext, response.StatusCode, response.Message));
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
     private static async Task<IResult> LogoutAsync(
@@ -113,5 +156,38 @@ public static class AccountEndpoint
         string tokenId = accessor.HttpContext?.User.GetTokenID()!;
         await mediator.Send(new LogoutCommand(tokenId), token);
         return Results.Ok();
+    }
+
+    private static async Task<IResult> GetQrCodeAsync(
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
+    {
+        var response = await mediator.Send(new TOTPAuthenticatorQrCodeQuery()
+        {
+            UserEmail = accessor.HttpContext?.User.GetEmail()!,
+            UserId = accessor.HttpContext?.User.GetUserId()!,
+        }, token);
+
+        return response.Succeeded()
+            ? Results.File(response.Data.QrCodeImage, contentType: "image/png", fileDownloadName: "QrCodeImage")
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
+    }
+
+    private static async Task<IResult> VerifyTOTP(
+        TOTPVerifyRequest request,
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
+    {
+        var response = await mediator.Send(new TOTPAuthenticatorVerifyCommand()
+        {
+            Email = accessor.HttpContext?.User.GetEmail()!,
+            Token = request.Token
+        }, token);
+
+        return response.Succeeded()
+            ? Results.Ok()
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 }

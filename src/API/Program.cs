@@ -33,6 +33,6 @@ app.UseAuthorization();
 app.MapSuperHeroEndpoint();
 app.MapAccountEndpoint();
 
-await app.UseInfrastructureServices(app.Environment);
+await app.UseInfrastructureServicesAsync(app.Environment);
 
 app.Run();

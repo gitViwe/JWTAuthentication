@@ -79,7 +79,7 @@ internal class JWTTokenService : IJWTTokenService
         };
     }
 
-    public ClaimsPrincipal ValidateToken(ITokenRequest request, bool isRefreshToken = false)
+    public ClaimsPrincipal ValidateToken(TokenRequest request, bool isRefreshToken = false)
     {
         var handler = new JwtSecurityTokenHandler();
         try

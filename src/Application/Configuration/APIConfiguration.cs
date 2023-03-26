@@ -5,6 +5,7 @@
 /// </summary>
 public class APIConfiguration
 {
+    public string ApplicationName { get; set; } = string.Empty;
     public string Secret { get; init; } = string.Empty;
     public string ClientUrl { get; init; } = string.Empty;
     public string ServerUrl { get; init; } = string.Empty;

@@ -13,4 +13,9 @@ public static class HubPermissions
     {
         public const string Manage = "Permission.Profile.Manage";
     }
+
+    public static class Authentication
+    {
+        public const string TOTP = "Permission.Authentication.TOTP";
+    }
 }

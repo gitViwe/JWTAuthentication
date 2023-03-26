@@ -11,34 +11,53 @@ public interface IHubIdentityService
     /// Register a new user on the system
     /// </summary>
     /// <param name="request">This is the required user information to register</param>
-    /// <param name="token">Propagates notification that operations should be canceled</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> RegisterAsync(IRegisterRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> RegisterAsync(RegisterRequest request, CancellationToken token);
 
     /// <summary>
     /// Request a new token if the current token is invalid or expired
     /// </summary>
     /// <param name="request">This is the required user information to request a new token</param>
-    /// <param name="token">Propagates notification that operations should be canceled</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> RefreshToken(ITokenRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> RefreshToken(TokenRequest request, CancellationToken token);
 
     /// <summary>
     /// Login an existing system user
     /// </summary>
     /// <param name="request">This is the required user information to login</param>
-    /// /// <param name="token">Propagates notification that operations should be canceled</param>
+    /// /// <param name="token">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> LoginUserAsync(ILoginRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken token);
 
     /// <summary>
     /// Logout the current system user
     /// </summary>
     /// <param name="tokenId">The current user's JWT token id</param>
-    /// <param name="token">Propagates notification that operations should be canceled</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
     /// <exception cref="UnauthorizedException"></exception>
     Task LogoutUserAsync(string tokenId, CancellationToken token);
+
+    /// <summary>
+    /// Get a QrCode image for the current user
+    /// </summary>
+    /// <param name="request">The current user's JWT and refresh token</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <returns>The image as an <see cref="QrCodeImageResponse"/> instance</returns>
+    /// <exception cref="UnauthorizedException"></exception>
+    Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken token);
+
+    /// <summary>
+    /// Verifies the time-based one-time password (TOTP)
+    /// </summary>
+    /// <param name="email">The user's email</param>
+    /// <param name="totp">The user's TOTP</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <returns>The response message</returns>
+    /// <exception cref="UnauthorizedException"></exception>
+    Task<IResponse> ValidateTOTPAsync(string email, string totp, CancellationToken token);
 }
