@@ -16,7 +16,7 @@ public static class ConfigureServices
         services.RegisterDatabaseContext(configuration, environment);
         services.RegisterIdentity();
         services.RegisterAuthentication(configuration, environment);
-        services.RegisterCors(configuration);
+        services.RegisterCors(configuration, environment);
 
         return services;
     }

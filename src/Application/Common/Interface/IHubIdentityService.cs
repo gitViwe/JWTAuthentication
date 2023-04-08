@@ -60,4 +60,13 @@ public interface IHubIdentityService
     /// <returns>The response message</returns>
     /// <exception cref="UnauthorizedException"></exception>
     Task<IResponse> ValidateTOTPAsync(string email, string totp, CancellationToken token);
+
+    /// <summary>
+    /// Updates the user's first name and last name
+    /// </summary>
+    /// <param name="email">The user's email</param>
+    /// <param name="request">The current user's details</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <returns></returns>
+    Task<IResponse<TokenResponse>> UpdateUserAsync(string email, UpdateUserRequest request, CancellationToken token);
 }

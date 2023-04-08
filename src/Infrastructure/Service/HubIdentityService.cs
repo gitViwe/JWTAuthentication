@@ -3,7 +3,6 @@ using Application.Configuration;
 using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using Infrastructure.Persistance.Entity;
-using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -12,6 +11,7 @@ using OtpNet;
 using Shared.Constant;
 using Shared.Contract.Identity;
 using System.Security.Claims;
+using System.Text;
 
 namespace Infrastructure.Service;
 
@@ -151,5 +151,30 @@ internal class HubIdentityService : IHubIdentityService
         var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(newUser);
         // create JWT token
         return Response<TokenResponse>.Success("Registration successful.", _tokenService.GenerateToken(claimsPrincipal));
+    }
+
+    public async Task<IResponse<TokenResponse>> UpdateUserAsync(string email, UpdateUserRequest request, CancellationToken token)
+    {
+        var user = await _userManager.FindByEmailAsync(email)
+            ?? throw new UnauthorizedException($"User with Email: [{email}] does not exist.");
+
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            var sb = new StringBuilder()
+                .AppendLine("Unable to update user details.")
+                .AppendLine(string.Join(Environment.NewLine, result.Errors.Select(x => x.Description)));
+
+            throw new UnauthorizedException(sb.ToString(), "Unable to update user details.");
+        }
+
+        // get claims principal from user
+        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
+        // create JWT token
+        return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
     }
 }

@@ -185,7 +185,7 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterCors(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterCors(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         // add CORS policy https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-6.0
         services.AddCors(options =>
@@ -193,7 +193,16 @@ internal static class ServiceCollectionExtension
             options.AddDefaultPolicy(
                 builder =>
                 {
-                    builder
+                    if (environment.IsDevelopment() || environment.IsEnvironment("Docker"))
+                    {
+                        builder
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowAnyOrigin();
+                    }
+                    else
+                    {
+                        builder
                         .AllowCredentials()
                         .AllowAnyHeader()
                         .AllowAnyMethod()
@@ -203,6 +212,7 @@ internal static class ServiceCollectionExtension
                             configuration[HubConfigurations.API.ServerUrl]!.TrimEnd('/'),
                             configuration[HubConfigurations.API.ClientUrl]!.TrimEnd('/')
                         });
+                    }
                 });
         });
 

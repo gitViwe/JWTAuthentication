@@ -3,6 +3,7 @@ using Application.Feature.Identity.LogoutUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
 using Application.Feature.Identity.TOTPAuthenticator;
+using Application.Feature.Identity.UpdateUser;
 using gitViwe.ProblemDetail;
 using gitViwe.Shared.Extension;
 using MediatR;
@@ -83,8 +84,8 @@ public static class AccountEndpoint
                 Description = "Get a QrCode image to scan and set up time-based one-time password (TOTP).",
             });
 
-        app.MapPost(Shared.Route.API.AcccountEndpoint.TOTPVerify, VerifyTOTP)
-            .WithName(nameof(VerifyTOTP))
+        app.MapPost(Shared.Route.API.AcccountEndpoint.TOTPVerify, VerifyTOTPAsync)
+            .WithName(nameof(VerifyTOTPAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json")
@@ -92,6 +93,17 @@ public static class AccountEndpoint
             {
                 Summary = "Verify TOTP.",
                 Description = "Verify the time-based one-time password (TOTP).",
+            });
+
+        app.MapPost(Shared.Route.API.AcccountEndpoint.Update, UpdateDetailsAsync)
+            .WithName(nameof(UpdateDetailsAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Update user details.",
+                Description = "Update the current user's first name and last name.",
             });
     }
 
@@ -109,7 +121,7 @@ public static class AccountEndpoint
             UserName = request.UserName
         }, token);
 
-        return response.Succeeded()
+        return response.Succeeded
             ? Results.Ok(response.Data)
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
@@ -126,7 +138,7 @@ public static class AccountEndpoint
             Password = request.Password,
         }, token);
 
-        return response.Succeeded()
+        return response.Succeeded
             ? Results.Ok(response.Data)
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
@@ -143,7 +155,7 @@ public static class AccountEndpoint
             Token = request.Token,
         }, token);
 
-        return response.Succeeded()
+        return response.Succeeded
             ? Results.Ok(response.Data)
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
@@ -169,12 +181,12 @@ public static class AccountEndpoint
             UserId = accessor.HttpContext?.User.GetUserId()!,
         }, token);
 
-        return response.Succeeded()
+        return response.Succeeded
             ? Results.File(response.Data.QrCodeImage, contentType: "image/png", fileDownloadName: "QrCodeImage")
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
-    private static async Task<IResult> VerifyTOTP(
+    private static async Task<IResult> VerifyTOTPAsync(
         TOTPVerifyRequest request,
         [FromServices] IHttpContextAccessor accessor,
         [FromServices] IMediator mediator,
@@ -186,7 +198,25 @@ public static class AccountEndpoint
             Token = request.Token
         }, token);
 
-        return response.Succeeded()
+        return response.Succeeded
+            ? Results.Ok()
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
+    }
+
+    private static async Task<IResult> UpdateDetailsAsync(
+        UpdateUserRequest request,
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
+    {
+        var response = await mediator.Send(new UpdateUserRequestCommand()
+        {
+            Email = accessor.HttpContext?.User.GetEmail()!,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+        }, token);
+
+        return response.Succeeded
             ? Results.Ok()
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }

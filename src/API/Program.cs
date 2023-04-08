@@ -24,6 +24,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
     });
 }
 
+app.UseCors();
 app.UseHttpsRedirection();
 
 // add authentication middle-ware
