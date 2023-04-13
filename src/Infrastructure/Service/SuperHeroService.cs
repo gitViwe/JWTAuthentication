@@ -1,4 +1,4 @@
-﻿using Application.Common.Interface;
+﻿using Application.Service;
 using gitViwe.Shared;
 using Microsoft.AspNetCore.Hosting;
 using Shared.Contract;

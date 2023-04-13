@@ -1,10 +1,10 @@
-﻿using Application.Common.Interface;
+﻿using Application.Service;
 using OtpNet;
 using QRCoder;
 
 namespace Infrastructure.Service;
 
-internal class TOTPService : ITOTPService
+internal class TimeBasedOTPService : ITimeBasedOTPService
 {
     public byte[] GenerateQrCode(string email, byte[] secretKey, string applicationName)
     {

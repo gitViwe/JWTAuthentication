@@ -1,12 +1,12 @@
 ﻿using Shared.Contract.Identity;
 using System.Security.Claims;
 
-namespace Application.Common.Interface;
+namespace Application.Service;
 
 /// <summary>
 /// Helper service to facilitate JWT token processing
 /// </summary>
-public interface IJWTTokenService
+public interface IJsonWebTokenService
 {
     /// <summary>
     /// Creates a JWT token and refresh token

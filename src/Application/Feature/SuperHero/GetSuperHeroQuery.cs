@@ -1,4 +1,5 @@
-﻿using Shared.Contract.SuperHero;
+﻿using Application.Service;
+using Shared.Contract.SuperHero;
 
 namespace Application.Feature.SuperHero;
 

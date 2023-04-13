@@ -1,9 +1,11 @@
-﻿using Application.Common.Interface;
+﻿using Application.Common.ApiClient;
+using Application.Service;
 using gitViwe.ProblemDetail;
 using gitViwe.ProblemDetail.Base;
+using Infrastructure.ApiClient;
 using Infrastructure.Identity;
-using Infrastructure.Persistance;
-using Infrastructure.Persistance.Entity;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Entity;
 using Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -26,9 +28,10 @@ internal static class ServiceCollectionExtension
 {
     internal static IServiceCollection RegisterServiceImplementation(this IServiceCollection services)
     {
+        services.AddScoped(typeof(MongoDBRepository<>));
         services.AddScoped<ISuperHeroService, SuperHeroService>();
-        services.AddTransient<ITOTPService, TOTPService>();
-        services.AddTransient<IJWTTokenService, JWTTokenService>();
+        services.AddTransient<ITimeBasedOTPService, TimeBasedOTPService>();
+        services.AddTransient<IJsonWebTokenService, JsonWebTokenService>();
         services.AddTransient<IHubIdentityService, HubIdentityService>();
 
         return services;
@@ -214,6 +217,16 @@ internal static class ServiceCollectionExtension
                         });
                     }
                 });
+        });
+
+        return services;
+    }
+
+    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddHttpClient<IImageHostingClient, ImgBBClient>(client =>
+        {
+            client.BaseAddress = new Uri(configuration[HubConfigurations.APIClient.ImgBB.BaseUrl]!);
         });
 
         return services;

@@ -1,6 +1,6 @@
 ﻿namespace Application.Feature.Identity.UpdateUser;
 
-internal class UpdateUserRequestCommandValidator : AbstractValidator<UpdateUserRequestCommand>
+public class UpdateUserRequestCommandValidator : AbstractValidator<UpdateUserRequestCommand>
 {
     public UpdateUserRequestCommandValidator()
     {

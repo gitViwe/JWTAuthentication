@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Infrastructure.Persistance.Entity
+namespace Infrastructure.Persistence.Entity
 {
     /// <summary>
     /// A custom implementation of the <see cref="IdentityRole"/>

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Infrastructure.Persistance.Entity
+namespace Infrastructure.Persistence.Entity
 {
     /// <summary>
     /// A custom implementation of the <see cref="IdentityUser"/>
@@ -16,7 +16,7 @@ namespace Infrastructure.Persistance.Entity
             RefreshTokens = new HashSet<RefreshToken>();
         }
 
-        public string Avatar { get; set; } = string.Empty;
+        public string HubIdentityUserDataId { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string TOTPKey { get; set; } = string.Empty;

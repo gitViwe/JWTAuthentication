@@ -1,9 +1,9 @@
-﻿using Infrastructure.Persistance.Configuration;
-using Infrastructure.Persistance.Entity;
+﻿using Infrastructure.Persistence.Configuration;
+using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistance
+namespace Infrastructure.Persistence
 {
     /// <summary>
     /// The entity Framework Core context class inherits from <see cref="IdentityDbContext"/>

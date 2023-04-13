@@ -1,4 +1,6 @@
-﻿namespace Application.Feature.Identity.LogoutUser;
+﻿using Application.Service;
+
+namespace Application.Feature.Identity.LogoutUser;
 
 public record LogoutCommand(string TokenId) : IRequest { }
 

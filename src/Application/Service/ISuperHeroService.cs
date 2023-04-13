@@ -1,6 +1,6 @@
 ﻿using Shared.Contract.SuperHero;
 
-namespace Application.Common.Interface;
+namespace Application.Service;
 
 /// <summary>
 /// Facilitates the sample data for heroes

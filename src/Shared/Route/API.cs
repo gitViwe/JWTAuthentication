@@ -26,6 +26,7 @@ public static class API
         public const string RefreshToken = "api/account/refresh-token";
         public const string QrCode = "api/account/qrcode";
         public const string TOTPVerify = "api/account/totp/verify";
-        public const string Update = "api/account/update/detail";
+        public const string Detail = "api/account/detail";
+        public const string Picture = "api/account/picture";
     }
 }

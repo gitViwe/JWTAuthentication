@@ -27,5 +27,22 @@ public static class HubConfigurations
         public const string SQLite = "SQLite";
         public const string CosmosDb = "CosmosDb";
         public const string PostgreSQL = "PostgreSQL";
+        public const string MongoDb = "MongoDb";
+    }
+
+    /// <summary>
+    /// Provides the keys to get the values from the APIClient section
+    /// </summary>
+    public static class APIClient
+    {
+        public static class ImgBB
+        {
+            public const string BaseUrl = "APIClient:ImgBB:BaseUrl";
+            /// <summary>
+            /// Force uploads to be auto deleted after certain time (in seconds 60-15552000)
+            /// </summary>
+            public const string Expiration = "APIClient:ImgBB:Expiration";
+            public const string APIKey = "APIClient:ImgBB:APIKey";
+        }
     }
 }

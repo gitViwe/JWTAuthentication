@@ -1,8 +1,10 @@
-﻿using Application.Common.Interface;
+﻿using Application.Common.ApiClient;
 using Application.Configuration;
+using Application.Service;
 using gitViwe.Shared;
 using gitViwe.Shared.Extension;
-using Infrastructure.Persistance.Entity;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.Options;
 using OtpNet;
 using Shared.Constant;
 using Shared.Contract.Identity;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
@@ -19,18 +22,22 @@ internal class HubIdentityService : IHubIdentityService
 {
     private readonly IUserClaimsPrincipalFactory<HubIdentityUser> _claimsPrincipalFactory;
     private readonly UserManager<HubIdentityUser> _userManager;
-    private readonly IJWTTokenService _tokenService;
-    private readonly ITOTPService _tOTPService;
+    private readonly IJsonWebTokenService _tokenService;
+    private readonly ITimeBasedOTPService _tOTPService;
     private readonly APIConfiguration _configuration;
     private readonly ILogger<HubIdentityService> _logger;
+    private readonly IImageHostingClient _imageHosting;
+    private readonly MongoDBRepository<HubIdentityUserData> _userDataRepository;
 
     public HubIdentityService(
         IUserClaimsPrincipalFactory<HubIdentityUser> claimsPrincipalFactory,
         UserManager<HubIdentityUser> userManager,
-        IJWTTokenService tokenService,
-        ITOTPService tOTPService,
+        IJsonWebTokenService tokenService,
+        ITimeBasedOTPService tOTPService,
         IOptionsMonitor<APIConfiguration> optionsMonitor,
-        ILogger<HubIdentityService> logger)
+        ILogger<HubIdentityService> logger,
+        IImageHostingClient imageHosting,
+        MongoDBRepository<HubIdentityUserData> userDataRepository)
     {
         _claimsPrincipalFactory = claimsPrincipalFactory;
         _userManager = userManager;
@@ -38,6 +45,8 @@ internal class HubIdentityService : IHubIdentityService
         _tOTPService = tOTPService;
         _configuration = optionsMonitor.CurrentValue;
         _logger = logger;
+        _imageHosting = imageHosting;
+        _userDataRepository = userDataRepository;
     }
 
     public async Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken token)
@@ -93,6 +102,7 @@ internal class HubIdentityService : IHubIdentityService
             {
                 // get claims principal from user
                 var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
+                await EnrichClaimsPrincipalAsync(claimsPrincipal, existingUser);
                 // create JWT token
                 return Response<TokenResponse>.Success("Login successful.", _tokenService.GenerateToken(claimsPrincipal));
             }
@@ -121,6 +131,7 @@ internal class HubIdentityService : IHubIdentityService
         {
             // get claims principal from user
             claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
+            await EnrichClaimsPrincipalAsync(claimsPrincipal, existingUser);
             // create JWT token
             return Response<TokenResponse>.Success("Token refresh successful.", _tokenService.GenerateToken(claimsPrincipal));
         }
@@ -149,6 +160,7 @@ internal class HubIdentityService : IHubIdentityService
         await _userManager.AddClaimAsync(newUser, new Claim(HubClaimTypes.Permission, HubPermissions.Profile.Manage));
         // get claims principal from user
         var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(newUser);
+        await EnrichClaimsPrincipalAsync(claimsPrincipal, newUser);
         // create JWT token
         return Response<TokenResponse>.Success("Registration successful.", _tokenService.GenerateToken(claimsPrincipal));
     }
@@ -161,6 +173,68 @@ internal class HubIdentityService : IHubIdentityService
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
 
+        await UpdateUserAsync(user);
+
+        // get claims principal from user
+        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
+        await EnrichClaimsPrincipalAsync(claimsPrincipal, user);
+        // create JWT token
+        return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
+    }
+
+    public async Task<IResponse<TokenResponse>> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken token)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
+
+        var uploadResult = await _imageHosting.UploadImageAsync(request.File);
+        var userData = new HubIdentityUserData { ProfileImage = uploadResult, };
+
+        await _userDataRepository.ReplaceOneAsync(userData);
+
+        user.HubIdentityUserDataId = userData.Id.ToString();
+
+        await UpdateUserAsync(user);
+
+        // get claims principal from user
+        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
+        EnrichClaimsPrincipal(claimsPrincipal, user, userData);
+        // create JWT token
+        return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
+    }
+
+    private async Task EnrichClaimsPrincipalAsync(ClaimsPrincipal claimsPrincipal, HubIdentityUser user)
+    {
+        if (!string.IsNullOrWhiteSpace(user.HubIdentityUserDataId))
+        {
+            var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId);
+
+            if (userData is not null)
+            {
+                EnrichClaimsPrincipal(claimsPrincipal, user, userData);
+                return;
+            }
+        }
+
+        claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
+        }));
+    }
+
+    private static void EnrichClaimsPrincipal(ClaimsPrincipal claimsPrincipal, HubIdentityUser user, HubIdentityUserData userData)
+    {
+        claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
+            new Claim(HubClaimTypes.Avatar, userData.ProfileImage.Data.DisplayUrl ?? string.Empty),
+        }));
+    }
+
+    private async Task UpdateUserAsync(HubIdentityUser user)
+    {
         var result = await _userManager.UpdateAsync(user);
 
         if (!result.Succeeded)
@@ -171,10 +245,5 @@ internal class HubIdentityService : IHubIdentityService
 
             throw new UnauthorizedException(sb.ToString(), "Unable to update user details.");
         }
-
-        // get claims principal from user
-        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
-        // create JWT token
-        return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
     }
 }

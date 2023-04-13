@@ -1,6 +1,7 @@
-﻿using Shared.Contract.Identity;
+﻿using Microsoft.AspNetCore.Http;
+using Shared.Contract.Identity;
 
-namespace Application.Common.Interface;
+namespace Application.Service;
 
 /// <summary>
 /// Facilitates the authentication of system users
@@ -67,6 +68,17 @@ public interface IHubIdentityService
     /// <param name="email">The user's email</param>
     /// <param name="request">The current user's details</param>
     /// <param name="token">Propagates notification that operations should be cancelled</param>
-    /// <returns></returns>
+    /// <returns>The <see cref="TokenResponse"/></returns>
+    /// <exception cref="UnauthorizedException"></exception>
     Task<IResponse<TokenResponse>> UpdateUserAsync(string email, UpdateUserRequest request, CancellationToken token);
+
+    /// <summary>
+    /// Updates the user's profile image
+    /// </summary>
+    /// <param name="userId">The user's user id</param>
+    /// <param name="request">The current user's details</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <returns>The <see cref="TokenResponse"/></returns>
+    /// <exception cref="UnauthorizedException"></exception>
+    Task<IResponse<TokenResponse>> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken token);
 }

@@ -1,10 +1,10 @@
-﻿using Application.Common.Interface;
-using Application.Configuration;
+﻿using Application.Configuration;
+using Application.Service;
 using gitViwe.Shared;
 using gitViwe.Shared.Extension;
 using Infrastructure.Identity;
-using Infrastructure.Persistance;
-using Infrastructure.Persistance.Entity;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -16,7 +16,7 @@ using System.Text;
 
 namespace Infrastructure.Service;
 
-internal class JWTTokenService : IJWTTokenService
+internal class JsonWebTokenService : IJsonWebTokenService
 {
     private readonly APIConfiguration _configuration;
     private readonly HubDbContext _dbContext;
@@ -24,7 +24,7 @@ internal class JWTTokenService : IJWTTokenService
     private readonly RefreshTokenValidationParameters _refreshValidationParameters;
     private readonly IHttpContextAccessor _contextAccessor;
 
-    public JWTTokenService(
+    public JsonWebTokenService(
         IOptionsMonitor<APIConfiguration> optionsMonitor,
         HubDbContext dbContext,
         TokenValidationParameters validationParameters,
@@ -173,7 +173,10 @@ internal class JWTTokenService : IJWTTokenService
             ClaimTypes.NameIdentifier,
             ClaimTypes.Name,
             ClaimTypes.Email,
-            HubClaimTypes.Permission
+            HubClaimTypes.Avatar,
+            HubClaimTypes.Permission,
+            JwtRegisteredClaimNames.GivenName,
+            JwtRegisteredClaimNames.FamilyName
         };
 
         var userClaims = claims.Where(x => requiredClaims.Contains(x.Type)).ToList();
@@ -181,7 +184,6 @@ internal class JWTTokenService : IJWTTokenService
 
         return userClaims;
     }
-
     private string GetAudienceUrl()
     {
         if (_contextAccessor.HttpContext is null)

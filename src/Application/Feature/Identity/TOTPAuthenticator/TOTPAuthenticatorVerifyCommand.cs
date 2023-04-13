@@ -1,4 +1,5 @@
-﻿using Shared.Contract.Identity;
+﻿using Application.Service;
+using Shared.Contract.Identity;
 
 namespace Application.Feature.Identity.TOTPAuthenticator;
 

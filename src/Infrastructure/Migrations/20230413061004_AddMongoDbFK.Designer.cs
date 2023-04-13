@@ -11,16 +11,16 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(HubDbContext))]
-    [Migration("20230326083323_Initial")]
-    partial class Initial
+    [Migration("20230413061004_AddMongoDbFK")]
+    partial class AddMongoDbFK
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
 
-            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityRole", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entity.HubIdentityRole", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -43,17 +43,13 @@ namespace Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entity.HubIdentityUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Avatar")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("ConcurrencyStamp")
                         .HasColumnType("TEXT");
@@ -65,6 +61,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HubIdentityUserDataId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -111,7 +111,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistance.Entity.RefreshToken", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entity.RefreshToken", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -262,9 +262,9 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserTokens");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistance.Entity.RefreshToken", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entity.RefreshToken", b =>
                 {
-                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", "User")
+                    b.HasOne("Infrastructure.Persistence.Entity.HubIdentityUser", "User")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -275,38 +275,38 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityRole", null)
+                    b.HasOne("Infrastructure.Persistence.Entity.HubIdentityRole", null)
                         .WithMany("RoleClaims")
                         .HasForeignKey("HubIdentityRoleId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entity.HubIdentityUser", null)
                         .WithMany("Claims")
                         .HasForeignKey("HubIdentityUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entity.HubIdentityUser", null)
                         .WithMany("Logins")
                         .HasForeignKey("HubIdentityUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistance.Entity.HubIdentityUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entity.HubIdentityUser", null)
                         .WithMany("Roles")
                         .HasForeignKey("HubIdentityUserId");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityRole", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entity.HubIdentityRole", b =>
                 {
                     b.Navigation("RoleClaims");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistance.Entity.HubIdentityUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entity.HubIdentityUser", b =>
                 {
                     b.Navigation("Claims");
 
