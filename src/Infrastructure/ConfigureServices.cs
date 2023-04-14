@@ -28,9 +28,10 @@ public static class ConfigureServices
         {
             return host.CreateDatabaseAsync();
         }
-        else
+        else if (environment.IsDevelopment())
         {
             return host.ApplyMigrationAsync();
         }
+        return Task.CompletedTask;
     }
 }
