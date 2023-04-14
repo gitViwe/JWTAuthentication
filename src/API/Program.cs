@@ -14,15 +14,11 @@ var app = builder.Build();
 
 app.UseHubExceptionHandler(app.Logger);
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.DisplayRequestDuration();
-    });
-}
+    options.DisplayRequestDuration();
+});
 
 app.UseCors();
 app.UseHttpsRedirection();
