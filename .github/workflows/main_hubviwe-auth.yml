@@ -14,31 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Set up .NET Core
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: |
-            6.x.x
-            7.x.x
+          dotnet-version: '7.x'
           include-prerelease: true
 
       - name: Build with dotnet
-        run: dotnet build src/API --configuration Release
+        run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish src/API -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
-      - name: App Settings Variable Substitution
-        uses: microsoft/variable-substitution@v1
-        with:
-          files: '${{env.DOTNET_ROOT}}/myapp/appsettings.json'
-        env:
-          ConnectionStrings.CosmosDb: ${{secrets.COSMOSDB_CONNECTION}}
-          ConnectionStrings.MongoDb: ${{secrets.MONGODB_CONNECTION}}
-          APIConfiguration.Secret: ${{secrets.JWT_SECRET_KEY}}
-          APIClient.ImgBB.APIKey: ${{secrets.IMGBB_SECRET_KEY}}
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
@@ -65,5 +53,5 @@ jobs:
         with:
           app-name: 'hubviwe-auth'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C9079CBE80DF440AA14613BF4DDFFA66 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6917210BF8684A62BB196214562E593C }}
           package: .
