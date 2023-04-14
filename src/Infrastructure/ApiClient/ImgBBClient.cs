@@ -1,4 +1,4 @@
-﻿using Application.Common.ApiClient;
+﻿using Application.ApiClient;
 using gitViwe.Shared.Extension;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;

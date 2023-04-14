@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Shared.Contract.Identity;
+﻿using Shared.Contract.Identity;
 
 namespace Application.Service;
 
@@ -81,4 +80,13 @@ public interface IHubIdentityService
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
     Task<IResponse<TokenResponse>> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken token);
+
+    /// <summary>
+    /// Get the current user's details
+    /// </summary>
+    /// <param name="userId">The user's user id</param>
+    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <returns>The <see cref="UserDetailResponse"/></returns>
+    /// <exception cref="UnauthorizedException"></exception>
+    Task<IResponse<UserDetailResponse>> GetUserDetailAsync(string userId, CancellationToken token);
 }

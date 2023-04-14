@@ -3,32 +3,31 @@ using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence
+namespace Infrastructure.Persistence;
+
+/// <summary>
+/// The entity Framework Core context class inherits from <see cref="IdentityDbContext"/>
+/// </summary>
+internal class HubDbContext : IdentityDbContext<HubIdentityUser, HubIdentityRole, string>
 {
     /// <summary>
-    /// The entity Framework Core context class inherits from <see cref="IdentityDbContext"/>
+    /// Instantiate context using user specified provider
     /// </summary>
-    internal class HubDbContext : IdentityDbContext<HubIdentityUser, HubIdentityRole, string>
+    /// <param name="options">The options used by <see cref="DbContext"/></param>
+    public HubDbContext(DbContextOptions<HubDbContext> options)
+        : base(options)
     {
-        /// <summary>
-        /// Instantiate context using user specified provider
-        /// </summary>
-        /// <param name="options">The options used by <see cref="DbContext"/></param>
-        public HubDbContext(DbContextOptions<HubDbContext> options)
-            : base(options)
-        {
-            RefreshTokens = Set<RefreshToken>();
-        }
-
-        /// <summary>
-        /// Configures the database context class models specified in <see cref="IdentityConfiguration"/>
-        /// </summary>
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            // configure identity relations
-            modelBuilder.ApplyConfigurationsFromAssembly(this.GetType().Assembly);
-        }
-
-        public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+        RefreshTokens = Set<RefreshToken>();
     }
+
+    /// <summary>
+    /// Configures the database context class models specified in <see cref="IdentityConfiguration"/>
+    /// </summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // configure identity relations
+        modelBuilder.ApplyConfigurationsFromAssembly(this.GetType().Assembly);
+    }
+
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 }

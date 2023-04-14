@@ -6,6 +6,10 @@ using Shared.Constant;
 
 namespace Infrastructure.Persistence;
 
+/// <summary>
+/// A mongoDb database repository to interface with the document database
+/// </summary>
+/// <typeparam name="TMongoDocument">The document database entity type</typeparam>
 internal class MongoDBRepository<TMongoDocument> where TMongoDocument : MongoDocument
 {
     private readonly IMongoCollection<TMongoDocument> _collection;
@@ -24,6 +28,11 @@ internal class MongoDBRepository<TMongoDocument> where TMongoDocument : MongoDoc
         return ((BsonCollectionAttribute)data).CollectionName;
     }
 
+    /// <summary>
+    /// Gets the first result or null
+    /// </summary>
+    /// <param name="id">The <seealso cref="ObjectId.ToString"/> value</param>
+    /// <returns>A Task whose result is the single result or null</returns>
     public Task<TMongoDocument> FindByIdAsync(string id)
     {
         var objectId = new ObjectId(id);
@@ -31,9 +40,23 @@ internal class MongoDBRepository<TMongoDocument> where TMongoDocument : MongoDoc
         return _collection.Find(filter).FirstOrDefaultAsync();
     }
 
+    /// <summary>
+    /// Replace a single document or create an new one if it does not exist
+    /// </summary>
+    /// <param name="document">The document to insert or replace</param>
+    /// <returns>A Task representing the method</returns>
     public Task ReplaceOneAsync(TMongoDocument document)
     {
         var filter = Builders<TMongoDocument>.Filter.Eq(doc => doc.Id, document.Id);
         return _collection.ReplaceOneAsync(filter, document, new ReplaceOptions { IsUpsert = true });
+    }
+
+    /// <summary>
+    /// Creates a queryable source of documents.
+    /// </summary>
+    /// <returns>Creates a queryable source of documents.</returns>
+    public IQueryable<TMongoDocument> AsQueryable()
+    {
+        return _collection.AsQueryable();
     }
 }

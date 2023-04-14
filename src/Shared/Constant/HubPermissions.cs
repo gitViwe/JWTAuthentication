@@ -16,6 +16,6 @@ public static class HubPermissions
 
     public static class Authentication
     {
-        public const string TOTP = "Permission.Authentication.TOTP";
+        public const string VerifiedTOTP = "Permission.Authentication.VerifiedTOTP";
     }
 }

@@ -1,4 +1,4 @@
-﻿using Application.Common.ApiClient;
+﻿using Application.ApiClient;
 using Application.Service;
 using gitViwe.ProblemDetail;
 using gitViwe.ProblemDetail.Base;
@@ -39,19 +39,24 @@ internal static class ServiceCollectionExtension
 
     internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        if (environment.IsEnvironment("Docker"))
-        {
-            return services.AddDbContext<HubDbContext>(options =>
-            {
-                options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
-            });
-        }
-
         return services.AddDbContext<HubDbContext>(options =>
         {
-            // using an SQlite provider
-            options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
-                                b => b.MigrationsAssembly("Infrastructure"));
+            if (environment.IsEnvironment("Docker"))
+            {
+                // using an PostgreSQL provider
+                options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
+            }
+            else if (environment.IsDevelopment())
+            {
+                // using an SQlite provider
+                options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
+                                    b => b.MigrationsAssembly("Infrastructure"));
+            }
+            else
+            {
+                // using an CosmosDb provider
+                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "hubviwe-auth-db"); 
+            }
         });
     }
 

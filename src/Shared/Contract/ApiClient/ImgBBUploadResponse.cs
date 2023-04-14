@@ -5,7 +5,7 @@ namespace Shared.Contract.ApiClient;
 public class ImgBBUploadResponse
 {
     [JsonPropertyName("data")]
-    public Data Data { get; set; } = new();
+    public ImgBBData Data { get; set; } = new();
 
     [JsonPropertyName("success")]
     public bool Success { get; set; }
@@ -14,7 +14,7 @@ public class ImgBBUploadResponse
     public int Status { get; set; }
 }
 
-public class Data
+public class ImgBBData
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
@@ -47,16 +47,16 @@ public class Data
     public int Expiration { get; set; }
 
     [JsonPropertyName("image")]
-    public Image Image { get; set; } = new();
+    public ImgBBImage Image { get; set; } = new();
 
     [JsonPropertyName("thumb")]
-    public Thumb Thumb { get; set; } = new();
+    public ImgBBThumb Thumb { get; set; } = new();
 
     [JsonPropertyName("delete_url")]
     public string DeleteUrl { get; set; } = string.Empty;
 }
 
-public class Image
+public class ImgBBImage
 {
     [JsonPropertyName("filename")]
     public string Filename { get; set; } = string.Empty;
@@ -74,7 +74,7 @@ public class Image
     public string Url { get; set; } = string.Empty;
 }
 
-public class Thumb
+public class ImgBBThumb
 {
     [JsonPropertyName("filename")]
     public string Filename { get; set; } = string.Empty;

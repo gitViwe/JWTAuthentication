@@ -6,6 +6,7 @@ using Application.Feature.Identity.RegisterUser;
 using Application.Feature.Identity.TOTPAuthenticator;
 using Application.Feature.Identity.UpdateUser;
 using Application.Feature.Identity.UploadImage;
+using Application.Feature.Identity.UserDetail;
 using gitViwe.ProblemDetail;
 using gitViwe.Shared.Extension;
 using MediatR;
@@ -121,6 +122,18 @@ public static class AccountEndpoint
             {
                 Summary = "Upload profile picture.",
                 Description = "Upload or replace the user's profile picture image.",
+            });
+
+        app.MapGet(Shared.Route.API.AcccountEndpoint.Detail, GetUserDetailAsync)
+            .WithName(nameof(GetUserDetailAsync))
+            .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
+            .Produces<UserDetailResponse>(StatusCodes.Status200OK, contentType: MediaTypeNames.Application.Json)
+            .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .ProducesValidationProblem(contentType: "application/problem+json")
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Get user details.",
+                Description = "Get the current user's details.",
             });
     }
 
@@ -248,6 +261,21 @@ public static class AccountEndpoint
         {
             UserId = accessor.HttpContext?.User.GetUserId()!,
             File = file,
+        }, token);
+
+        return response.Succeeded
+            ? Results.Ok(response.Data)
+            : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
+    }
+
+    private static async Task<IResult> GetUserDetailAsync(
+        [FromServices] IHttpContextAccessor accessor,
+        [FromServices] IMediator mediator,
+        CancellationToken token = default)
+    {
+        var response = await mediator.Send(new UserDetailQuery()
+        {
+            UserId = accessor.HttpContext?.User.GetUserId()!,
         }, token);
 
         return response.Succeeded

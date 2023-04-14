@@ -13,5 +13,5 @@ public static class HubClaimTypes
     /// <summary>
     /// The key to the Avatar claim
     /// </summary>
-    public const string Avatar = "Avatar";
+    public const string Avatar = "avatar";
 }

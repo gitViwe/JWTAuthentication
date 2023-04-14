@@ -1,4 +1,4 @@
-﻿using Application.Common.ApiClient;
+﻿using Application.ApiClient;
 using Application.Configuration;
 using Application.Service;
 using gitViwe.Shared;
@@ -82,9 +82,9 @@ internal class HubIdentityService : IHubIdentityService
         // get claims principal from user
         var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
 
-        if (!claimsPrincipal.HasClaim(HubClaimTypes.Permission, HubPermissions.Authentication.TOTP))
+        if (!claimsPrincipal.HasClaim(HubClaimTypes.Permission, HubPermissions.Authentication.VerifiedTOTP))
         {
-            await _userManager.AddClaimAsync(user, new Claim(HubClaimTypes.Permission, HubPermissions.Authentication.TOTP));
+            await _userManager.AddClaimAsync(user, new Claim(HubClaimTypes.Permission, HubPermissions.Authentication.VerifiedTOTP));
         }
 
         return Response.Success("The TOTP has been verified successfully.");
@@ -203,34 +203,74 @@ internal class HubIdentityService : IHubIdentityService
         return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
     }
 
+    public async Task<IResponse<UserDetailResponse>> GetUserDetailAsync(string userId, CancellationToken token)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
+
+        var userDetail = new UserDetailResponse()
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            Username = user.UserName ?? string.Empty,
+        };
+
+        if (!string.IsNullOrEmpty(user.HubIdentityUserDataId))
+        {
+            var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId);
+
+            if (userData is not null)
+            {
+                userDetail.ProfileImage = new()
+                {
+                    Image = userData.ProfileImage.Data.Image,
+                    Thumbnail = userData.ProfileImage.Data.Thumb,
+                };
+            }
+        }
+
+        return Response<UserDetailResponse>.Success("User details retrieved.", userDetail);
+    }
+
     private async Task EnrichClaimsPrincipalAsync(ClaimsPrincipal claimsPrincipal, HubIdentityUser user)
     {
         if (!string.IsNullOrWhiteSpace(user.HubIdentityUserDataId))
         {
             var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId);
 
-            if (userData is not null)
-            {
-                EnrichClaimsPrincipal(claimsPrincipal, user, userData);
-                return;
-            }
+            EnrichClaimsPrincipal(claimsPrincipal, user, userData);
+            return;
         }
 
-        claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
-        {
-            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
-        }));
+        EnrichClaimsPrincipal(claimsPrincipal, user, null);
     }
 
     private static void EnrichClaimsPrincipal(ClaimsPrincipal claimsPrincipal, HubIdentityUser user, HubIdentityUserData userData)
     {
-        claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
+        if (!string.IsNullOrWhiteSpace(user.FirstName))
         {
-            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
-            new Claim(HubClaimTypes.Avatar, userData.ProfileImage.Data.DisplayUrl ?? string.Empty),
-        }));
+            claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
+            }));
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.LastName))
+        {
+            claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
+            }));
+        }
+
+        if (userData is not null)
+        {
+            claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
+            {
+                    new Claim(HubClaimTypes.Avatar, userData.ProfileImage.Data.Image.Url ?? string.Empty),
+            }));
+        }
     }
 
     private async Task UpdateUserAsync(HubIdentityUser user)

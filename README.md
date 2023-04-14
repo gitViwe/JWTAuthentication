@@ -24,10 +24,11 @@ Things you need to use the software and how to install them.
    ```
 2. Run via Docker
    ```
-   docker compose up -d
+   docker compose up --build -d
    ```
 3. Build and run the API
    ```
+   docker compose --file docker-compose.development.yml up -d
    cd src/api
    dotnet run
    ```

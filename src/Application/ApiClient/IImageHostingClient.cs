@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Shared.Contract.ApiClient;
 
-namespace Application.Common.ApiClient;
+namespace Application.ApiClient;
 
 /// <summary>
 /// An abstraction of an image hosting service
