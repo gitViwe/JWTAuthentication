@@ -20,8 +20,8 @@ namespace Infrastructure.Service;
 
 internal class HubIdentityService : IHubIdentityService
 {
-    private readonly IUserClaimsPrincipalFactory<HubIdentityUser> _claimsPrincipalFactory;
     private readonly UserManager<HubIdentityUser> _userManager;
+    private readonly RoleManager<HubIdentityRole> _roleManager;
     private readonly IJsonWebTokenService _tokenService;
     private readonly ITimeBasedOTPService _tOTPService;
     private readonly APIConfiguration _configuration;
@@ -30,16 +30,15 @@ internal class HubIdentityService : IHubIdentityService
     private readonly MongoDBRepository<HubIdentityUserData> _userDataRepository;
 
     public HubIdentityService(
-        IUserClaimsPrincipalFactory<HubIdentityUser> claimsPrincipalFactory,
         UserManager<HubIdentityUser> userManager,
         IJsonWebTokenService tokenService,
         ITimeBasedOTPService tOTPService,
         IOptionsMonitor<APIConfiguration> optionsMonitor,
         ILogger<HubIdentityService> logger,
         IImageHostingClient imageHosting,
-        MongoDBRepository<HubIdentityUserData> userDataRepository)
+        MongoDBRepository<HubIdentityUserData> userDataRepository,
+        RoleManager<HubIdentityRole> roleManager)
     {
-        _claimsPrincipalFactory = claimsPrincipalFactory;
         _userManager = userManager;
         _tokenService = tokenService;
         _tOTPService = tOTPService;
@@ -47,6 +46,7 @@ internal class HubIdentityService : IHubIdentityService
         _logger = logger;
         _imageHosting = imageHosting;
         _userDataRepository = userDataRepository;
+        _roleManager = roleManager;
     }
 
     public async Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken token)
@@ -80,7 +80,7 @@ internal class HubIdentityService : IHubIdentityService
         }
 
         // get claims principal from user
-        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
+        var claimsPrincipal = await CreateClaimsPrincipalAsync(user);
 
         if (!claimsPrincipal.HasClaim(HubClaimTypes.Permission, HubPermissions.Authentication.VerifiedTOTP))
         {
@@ -101,9 +101,8 @@ internal class HubIdentityService : IHubIdentityService
             if (await _userManager.CheckPasswordAsync(existingUser, request.Password))
             {
                 // get claims principal from user
-                var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
-                await EnrichClaimsPrincipalAsync(claimsPrincipal, existingUser);
-                // create JWT token
+                var claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser);
+
                 return Response<TokenResponse>.Success("Login successful.", _tokenService.GenerateToken(claimsPrincipal));
             }
         }
@@ -130,9 +129,8 @@ internal class HubIdentityService : IHubIdentityService
         if (existingUser is not null)
         {
             // get claims principal from user
-            claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(existingUser);
-            await EnrichClaimsPrincipalAsync(claimsPrincipal, existingUser);
-            // create JWT token
+            claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser);
+
             return Response<TokenResponse>.Success("Token refresh successful.", _tokenService.GenerateToken(claimsPrincipal));
         }
 
@@ -159,9 +157,8 @@ internal class HubIdentityService : IHubIdentityService
         // add required permission
         await _userManager.AddClaimAsync(newUser, new Claim(HubClaimTypes.Permission, HubPermissions.Profile.Manage));
         // get claims principal from user
-        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(newUser);
-        await EnrichClaimsPrincipalAsync(claimsPrincipal, newUser);
-        // create JWT token
+        var claimsPrincipal = await CreateClaimsPrincipalAsync(newUser);
+
         return Response<TokenResponse>.Success("Registration successful.", _tokenService.GenerateToken(claimsPrincipal));
     }
 
@@ -176,9 +173,8 @@ internal class HubIdentityService : IHubIdentityService
         await UpdateUserAsync(user);
 
         // get claims principal from user
-        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
-        await EnrichClaimsPrincipalAsync(claimsPrincipal, user);
-        // create JWT token
+        var claimsPrincipal = await CreateClaimsPrincipalAsync(user);
+
         return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
     }
 
@@ -197,8 +193,7 @@ internal class HubIdentityService : IHubIdentityService
         await UpdateUserAsync(user);
 
         // get claims principal from user
-        var claimsPrincipal = await _claimsPrincipalFactory.CreateAsync(user);
-        EnrichClaimsPrincipal(claimsPrincipal, user, userData);
+        var claimsPrincipal = await CreateClaimsPrincipalAsync(user, userData);
         // create JWT token
         return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
     }
@@ -233,44 +228,72 @@ internal class HubIdentityService : IHubIdentityService
         return Response<UserDetailResponse>.Success("User details retrieved.", userDetail);
     }
 
-    private async Task EnrichClaimsPrincipalAsync(ClaimsPrincipal claimsPrincipal, HubIdentityUser user)
+    private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(HubIdentityUser user)
     {
         if (!string.IsNullOrWhiteSpace(user.HubIdentityUserDataId))
         {
             var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId);
 
-            EnrichClaimsPrincipal(claimsPrincipal, user, userData);
-            return;
+            return await CreateClaimsPrincipalAsync(user, userData);
         }
 
-        EnrichClaimsPrincipal(claimsPrincipal, user, null);
+        return await CreateClaimsPrincipalAsync(user, null);
     }
 
-    private static void EnrichClaimsPrincipal(ClaimsPrincipal claimsPrincipal, HubIdentityUser user, HubIdentityUserData userData)
+    private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(HubIdentityUser user, HubIdentityUserData? userData)
     {
+        List<Claim> claims = new()
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+            new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+        };
+
         if (!string.IsNullOrWhiteSpace(user.FirstName))
         {
-            claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty),
-            }));
+            claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty));
         }
 
         if (!string.IsNullOrWhiteSpace(user.LastName))
         {
-            claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
-            }));
+            claims.Add(new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty));
         }
 
         if (userData is not null)
         {
-            claimsPrincipal.AddIdentity(new ClaimsIdentity(new Claim[]
-            {
-                    new Claim(HubClaimTypes.Avatar, userData.ProfileImage.Data.Image.Url ?? string.Empty),
-            }));
+            claims.Add(new Claim(HubClaimTypes.Avatar, userData.ProfileImage?.Data?.Image?.Url ?? string.Empty));
         }
+
+        // get claims that are assigned to the user...
+        var userClaims = await _userManager.GetClaimsAsync(user);
+        if (userClaims is not null && userClaims.Any())
+        {
+            claims.AddRange(userClaims);
+        }
+
+        // get roles that are assigned to the user
+        foreach (var roleName in await _userManager.GetRolesAsync(user))
+        {
+            // get the identity role using the role name
+            var role = await _roleManager.FindByNameAsync(roleName);
+
+            if (role is null)
+            {
+                // skip this iteration
+                continue;
+            }
+
+            // add the role to the claims collection
+            claims.Add(new Claim(ClaimTypes.Role, roleName));
+
+            // get all claims associated with that role
+            foreach (var roleClaim in await _roleManager.GetClaimsAsync(role))
+            {
+                claims.Add(roleClaim);
+            }
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims));
     }
 
     private async Task UpdateUserAsync(HubIdentityUser user)
