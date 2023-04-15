@@ -45,4 +45,16 @@ public static class HubConfigurations
             public const string APIKey = "APIClient:ImgBB:APIKey";
         }
     }
+
+    /// <summary>
+    /// Provides the keys to get the values from the OpenTelemetry section
+    /// </summary>
+    public static class OpenTelemetry
+    {
+        public static class Honeycomb
+        {
+            public const string Endpoint = "OpenTelemetry:Honeycomb:Endpoint";
+            public const string Headers = "OpenTelemetry:Honeycomb:Headers";
+        }
+    }
 }

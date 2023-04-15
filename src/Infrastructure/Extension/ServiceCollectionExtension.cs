@@ -21,6 +21,9 @@ using Shared.Constant;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using OpenTelemetry.Resources;
+using Microsoft.Extensions.Logging;
+using OpenTelemetry.Trace;
 
 namespace Infrastructure.Extension;
 
@@ -235,5 +238,48 @@ internal static class ServiceCollectionExtension
         });
 
         return services;
+    }
+
+    public static void RegisterOpenTelemetry(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    {
+        string serviceName = configuration[HubConfigurations.API.ApplicationName]!;
+        var resource = ResourceBuilder.CreateDefault().AddService(serviceName);
+        string[] sourceNames = new string[] { serviceName };
+
+        services.AddOpenTelemetry().WithTracing(builder =>
+        {
+            builder.AddSource(sourceNames)
+                   .SetResourceBuilder(resource)
+                   .AddHttpClientInstrumentation(options => options.RecordException = true)
+                   .AddEntityFrameworkCoreInstrumentation(options => options.SetDbStatementForText = true)
+                   .AddAspNetCoreInstrumentation(options =>
+                   {
+                       options.Filter = (context) =>
+                       {
+                           // filter out these paths
+                           string[] urls =
+                           {
+                               "/swagger/v1/swagger.json",
+                               "/_vs/browserLink",
+                               "/_framework/aspnetcore-browser-refresh.js",
+                               "/swagger/index.html",
+                               "/swagger/favicon-32x32.png",
+                               "/favicon.ico",
+                               "/swagger/swagger-ui-bundle.js",
+                               "/swagger/swagger-ui-bundle.js",
+                               "/swagger/swagger-ui.css",
+                               "/"
+                           };
+                           return !urls.Contains(context.Request.Path.Value);
+                       };
+
+                       options.RecordException = true;
+                   });
+                   builder.AddOtlpExporter(option =>
+                   {
+                       option.Endpoint = new Uri(configuration[HubConfigurations.OpenTelemetry.Honeycomb.Endpoint]!);
+                       option.Headers = configuration[HubConfigurations.OpenTelemetry.Honeycomb.Headers]!;
+                   });
+        });
     }
 }

@@ -37,6 +37,7 @@ jobs:
           ConnectionStrings.MongoDb: ${{secrets.MONGODB_CONNECTION}}
           APIConfiguration.Secret: ${{secrets.JWT_SECRET_KEY}}
           APIClient.ImgBB.APIKey: ${{secrets.IMGBB_SECRET_KEY}}
+          OpenTelemetry.Honeycomb.Headers: ${{secrets.OTLP_HONEYCOMB_HEADER}}
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2

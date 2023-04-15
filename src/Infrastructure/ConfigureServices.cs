@@ -17,7 +17,8 @@ public static class ConfigureServices
             .RegisterIdentity()
             .RegisterAuthentication(configuration, environment)
             .RegisterCors(configuration, environment)
-            .RegisterHttpClient(configuration);
+            .RegisterHttpClient(configuration)
+            .RegisterOpenTelemetry(configuration, environment);
 
         return services;
     }
