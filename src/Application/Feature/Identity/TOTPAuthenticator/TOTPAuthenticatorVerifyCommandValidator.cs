@@ -6,8 +6,7 @@ public class TOTPAuthenticatorVerifyCommandValidator : AbstractValidator<TOTPAut
     {
         RuleFor(x => x.Token).NotEmpty();
 
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress().WithMessage("Email Address is invalid");
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("Invalid user details.");
     }
 }

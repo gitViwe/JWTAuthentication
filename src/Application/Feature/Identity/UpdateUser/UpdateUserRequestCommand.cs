@@ -5,7 +5,7 @@ namespace Application.Feature.Identity.UpdateUser;
 
 public class UpdateUserRequestCommand : UpdateUserRequest, IRequest<IResponse<TokenResponse>>
 {
-    public string Email { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
 }
 
 public class UpdateUserRequestCommandHandler : IRequestHandler<UpdateUserRequestCommand, IResponse<TokenResponse>>
@@ -19,6 +19,6 @@ public class UpdateUserRequestCommandHandler : IRequestHandler<UpdateUserRequest
 
     public Task<IResponse<TokenResponse>> Handle(UpdateUserRequestCommand request, CancellationToken cancellationToken)
     {
-        return _identityService.UpdateUserAsync(request.Email, request, cancellationToken);
+        return _identityService.UpdateUserAsync(request.UserId, request, cancellationToken);
     }
 }

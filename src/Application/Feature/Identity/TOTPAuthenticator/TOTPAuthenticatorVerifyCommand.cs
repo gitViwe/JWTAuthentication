@@ -5,7 +5,7 @@ namespace Application.Feature.Identity.TOTPAuthenticator;
 
 public class TOTPAuthenticatorVerifyCommand : TOTPVerifyRequest, IRequest<IResponse>
 {
-    public string Email { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
 }
 
 public class TOTPAuthenticatorVerifyCommandHandler : IRequestHandler<TOTPAuthenticatorVerifyCommand, IResponse>
@@ -18,6 +18,6 @@ public class TOTPAuthenticatorVerifyCommandHandler : IRequestHandler<TOTPAuthent
     }
     public Task<IResponse> Handle(TOTPAuthenticatorVerifyCommand request, CancellationToken cancellationToken)
     {
-        return _hubIdentity.ValidateTOTPAsync(request.Email, request.Token, cancellationToken);
+        return _hubIdentity.ValidateTOTPAsync(request.UserId, request.Token, cancellationToken);
     }
 }

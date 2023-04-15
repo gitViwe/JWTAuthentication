@@ -223,7 +223,7 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new TOTPAuthenticatorVerifyCommand()
         {
-            Email = accessor.HttpContext?.User.GetEmail()!,
+            UserId = accessor.HttpContext?.User.GetUserId()!,
             Token = request.Token
         }, token);
 
@@ -240,7 +240,7 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new UpdateUserRequestCommand()
         {
-            Email = accessor.HttpContext?.User.GetEmail()!,
+            UserId = accessor.HttpContext?.User.GetUserId()!,
             FirstName = request.FirstName,
             LastName = request.LastName,
         }, token);

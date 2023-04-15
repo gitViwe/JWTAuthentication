@@ -68,10 +68,10 @@ internal class HubIdentityService : IHubIdentityService
         return Response<QrCodeImageResponse>.Success("QrCode created.", response);
     }
 
-    public async Task<IResponse> ValidateTOTPAsync(string email, string totp, CancellationToken token)
+    public async Task<IResponse> ValidateTOTPAsync(string userId, string totp, CancellationToken token)
     {
-        var user = await _userManager.FindByEmailAsync(email)
-            ?? throw new UnauthorizedException($"User with Email: [{email}] does not exist.");
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
 
         if (string.IsNullOrWhiteSpace(user.TOTPKey))
         {
@@ -166,10 +166,10 @@ internal class HubIdentityService : IHubIdentityService
         return Response<TokenResponse>.Success("Registration successful.", _tokenService.GenerateToken(claimsPrincipal));
     }
 
-    public async Task<IResponse<TokenResponse>> UpdateUserAsync(string email, UpdateUserRequest request, CancellationToken token)
+    public async Task<IResponse<TokenResponse>> UpdateUserAsync(string userId, UpdateUserRequest request, CancellationToken token)
     {
-        var user = await _userManager.FindByEmailAsync(email)
-            ?? throw new UnauthorizedException($"User with Email: [{email}] does not exist.");
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
