@@ -7,6 +7,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OtpNet;
@@ -28,6 +29,7 @@ internal class HubIdentityService : IHubIdentityService
     private readonly ILogger<HubIdentityService> _logger;
     private readonly IImageHostingClient _imageHosting;
     private readonly MongoDBRepository<HubIdentityUserData> _userDataRepository;
+    private readonly HubDbContext _dbContext;
 
     public HubIdentityService(
         UserManager<HubIdentityUser> userManager,
@@ -37,7 +39,8 @@ internal class HubIdentityService : IHubIdentityService
         ILogger<HubIdentityService> logger,
         IImageHostingClient imageHosting,
         MongoDBRepository<HubIdentityUserData> userDataRepository,
-        RoleManager<HubIdentityRole> roleManager)
+        RoleManager<HubIdentityRole> roleManager,
+        HubDbContext dbContext)
     {
         _userManager = userManager;
         _tokenService = tokenService;
@@ -47,6 +50,7 @@ internal class HubIdentityService : IHubIdentityService
         _imageHosting = imageHosting;
         _userDataRepository = userDataRepository;
         _roleManager = roleManager;
+        _dbContext = dbContext;
     }
 
     public async Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken token)
@@ -272,25 +276,49 @@ internal class HubIdentityService : IHubIdentityService
         }
 
         // get roles that are assigned to the user
-        foreach (var roleName in await _userManager.GetRolesAsync(user))
+        foreach (var role in await GetRolesAsync(user))
         {
-            // get the identity role using the role name
-            var role = await _roleManager.FindByNameAsync(roleName);
-
             if (role is null)
             {
                 // skip this iteration
                 continue;
             }
 
-            // add the role to the claims collection
-            claims.Add(new Claim(ClaimTypes.Role, roleName));
+            if (!string.IsNullOrWhiteSpace(role.Name))
+            {
+                // add the role to the claims collection
+                claims.Add(new Claim(ClaimTypes.Role, role.Name)); 
+            }
 
             // get all claims associated with that role
             foreach (var roleClaim in await _roleManager.GetClaimsAsync(role))
             {
                 claims.Add(roleClaim);
             }
+        }
+
+        async Task<IEnumerable<HubIdentityRole>> GetRolesAsync(HubIdentityUser user)
+        {
+            // force the enumerable to execute rather than joining
+            var userRoleIds = await _dbContext.UserRoles
+                                            .AsNoTracking()
+                                            .Where(x => x.UserId == user.Id)
+                                            .Select(x => x.RoleId)
+                                            .ToArrayAsync();
+
+            if (userRoleIds is null || !userRoleIds.Any())
+            {
+                return Enumerable.Empty<HubIdentityRole>();
+            }
+
+            var roles = await _dbContext.Roles
+                                        .AsNoTracking()
+                                        .Where(x => userRoleIds.Contains(x.Id))
+                                        .ToArrayAsync();
+
+            return roles is not null && roles.Any()
+                ? roles
+                : Enumerable.Empty<HubIdentityRole>();
         }
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims));
