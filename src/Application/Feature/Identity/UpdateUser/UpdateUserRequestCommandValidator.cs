@@ -5,8 +5,7 @@ public class UpdateUserRequestCommandValidator : AbstractValidator<UpdateUserReq
     public UpdateUserRequestCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty()
-            .EmailAddress().WithMessage("Email Address is invalid");
+            .NotEmpty().WithMessage("Invalid user details.");
 
         RuleFor(x => x.FirstName)
             .NotEmpty();
