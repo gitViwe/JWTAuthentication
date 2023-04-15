@@ -55,7 +55,7 @@ internal static class ServiceCollectionExtension
             else
             {
                 // using an CosmosDb provider
-                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "hubviwe-auth-db"); 
+                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "SocialHub"); 
             }
         });
     }
