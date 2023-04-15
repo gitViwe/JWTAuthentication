@@ -207,7 +207,6 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new TOTPAuthenticatorQrCodeQuery()
         {
-            UserEmail = accessor.HttpContext?.User.GetEmail()!,
             UserId = accessor.HttpContext?.User.GetUserId()!,
         }, token);
 
