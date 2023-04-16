@@ -18,6 +18,6 @@ public interface ISuperHeroService
     /// Request the complete list of heroes
     /// </summary>
     /// <param name="token">Propagates notification that operations should be canceled</param>
-    /// <returns>A <see cref="IEnumerable{SuperHero}"/> where the data type is a collection of <see cref="SuperHeroResponse"/></returns>
+    /// <returns>A <see cref="IEnumerable{SuperHeroResponse}"/> where the data type is a collection of <see cref="SuperHeroResponse"/></returns>
     Task<IEnumerable<SuperHeroResponse>> GetEnumerableAsync(CancellationToken token);
 }

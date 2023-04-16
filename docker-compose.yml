@@ -48,3 +48,11 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+  jaeger:
+    image: jaegertracing/all-in-one:1
+    hostname: jaeger
+    container_name: jaeger
+    ports:
+      - "6831:6831/udp" # accepts jaeger.thrift over compact thrift protocol
+      - "16686:16686" # ui

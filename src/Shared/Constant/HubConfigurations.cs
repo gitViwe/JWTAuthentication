@@ -56,5 +56,11 @@ public static class HubConfigurations
             public const string Endpoint = "OpenTelemetry:Honeycomb:Endpoint";
             public const string Headers = "OpenTelemetry:Honeycomb:Headers";
         }
+
+        public static class Jaeger
+        {
+            public const string AgentHost = "OpenTelemetry:Jaeger:AgentHost";
+            public const string AgentPort = "OpenTelemetry:Jaeger:AgentPort";
+        }
     }
 }

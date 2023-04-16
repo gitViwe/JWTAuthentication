@@ -1,5 +1,6 @@
 ﻿using Application.ApiClient;
 using Application.Service;
+using Azure.Core;
 using gitViwe.ProblemDetail;
 using gitViwe.ProblemDetail.Base;
 using Infrastructure.ApiClient;
@@ -9,6 +10,7 @@ using Infrastructure.Persistence.Entity;
 using Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -16,14 +18,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Shared.Constant;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using OpenTelemetry.Resources;
-using Microsoft.Extensions.Logging;
-using OpenTelemetry.Trace;
 
 namespace Infrastructure.Extension;
 
@@ -58,7 +61,7 @@ internal static class ServiceCollectionExtension
             else
             {
                 // using an CosmosDb provider
-                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "SocialHub"); 
+                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "SocialHub");
             }
         });
     }
@@ -242,44 +245,59 @@ internal static class ServiceCollectionExtension
 
     public static void RegisterOpenTelemetry(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        string serviceName = configuration[HubConfigurations.API.ApplicationName]!;
-        var resource = ResourceBuilder.CreateDefault().AddService(serviceName);
-        string[] sourceNames = new string[] { serviceName };
+        var resource = ResourceBuilder.CreateDefault().AddService(configuration[HubConfigurations.API.ApplicationName]!);
 
         services.AddOpenTelemetry().WithTracing(builder =>
         {
-            builder.AddSource(sourceNames)
+            builder//.AddSource("MDRT")
                    .SetResourceBuilder(resource)
-                   .AddHttpClientInstrumentation(options => options.RecordException = true)
-                   .AddEntityFrameworkCoreInstrumentation(options => options.SetDbStatementForText = true)
+                   .AddHttpClientInstrumentation(options =>
+                   {
+                       options.RecordException = true;
+
+                       options.EnrichWithException = (activity, exception) => activity?.RecordException(exception);
+
+                       options.EnrichWithHttpRequestMessage = (activity, request) =>
+                       {
+                           string absPath = request.RequestUri?.AbsolutePath ?? string.Empty;
+                           if (absPath.Contains("upload"))
+                           {
+                               activity?.AddEvent(new ActivityEvent("Processing Image Upload Request."));
+                           }
+                       };
+                   })
+                   .AddEntityFrameworkCoreInstrumentation()
                    .AddAspNetCoreInstrumentation(options =>
                    {
-                       options.Filter = (context) =>
+                       options.RecordException = true;
+                       options.Filter = (context) => !HubOpenTelemetry.AspNetCoreInstrumentation.FilterUrls.Contains(context.Request.Path.Value);
+                       options.EnrichWithHttpResponse = (activity, response) =>
                        {
-                           // filter out these paths
-                           string[] urls =
+                           var handlerFeature = response.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+                           if (handlerFeature is not null)
                            {
-                               "/swagger/v1/swagger.json",
-                               "/_vs/browserLink",
-                               "/_framework/aspnetcore-browser-refresh.js",
-                               "/swagger/index.html",
-                               "/swagger/favicon-32x32.png",
-                               "/favicon.ico",
-                               "/swagger/swagger-ui-bundle.js",
-                               "/swagger/swagger-ui-bundle.js",
-                               "/swagger/swagger-ui.css",
-                               "/"
-                           };
-                           return !urls.Contains(context.Request.Path.Value);
+                               activity?.RecordException(handlerFeature.Error);
+                           }
                        };
 
-                       options.RecordException = true;
                    });
-                   builder.AddOtlpExporter(option =>
-                   {
-                       option.Endpoint = new Uri(configuration[HubConfigurations.OpenTelemetry.Honeycomb.Endpoint]!);
-                       option.Headers = configuration[HubConfigurations.OpenTelemetry.Honeycomb.Headers]!;
-                   });
+
+            if (environment.IsProduction())
+            {
+                builder.AddOtlpExporter(option =>
+                {
+                    option.Endpoint = new Uri(configuration[HubConfigurations.OpenTelemetry.Honeycomb.Endpoint]!);
+                    option.Headers = configuration[HubConfigurations.OpenTelemetry.Honeycomb.Headers]!;
+                });
+            }
+            else
+            {
+                builder.AddJaegerExporter(options =>
+                {
+                    options.AgentHost = configuration[HubConfigurations.OpenTelemetry.Jaeger.AgentHost]!;
+                    options.AgentPort = int.Parse(configuration[HubConfigurations.OpenTelemetry.Jaeger.AgentPort]!);
+                });
+            }
         });
     }
 }
