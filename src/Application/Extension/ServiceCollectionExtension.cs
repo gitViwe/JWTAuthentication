@@ -13,6 +13,7 @@ internal static class ServiceCollectionExtension
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            config.AddOpenBehavior(typeof(OpenTelemetryBehaviour<,>));
             config.AddOpenBehavior(typeof(ValidationBehaviour<,>));
         });
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
