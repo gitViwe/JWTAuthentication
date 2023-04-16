@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Shared.Constant;
@@ -21,12 +22,24 @@ public static class HubOpenTelemetry
         return Regex.Replace(text, pattern, replacement);
     }
 
+
+    public static class MediatRActivitySource
+    {
+        private static readonly ActivitySource ActivitySource = new("MediatR");
+
+        public static void StartActivity(string activityName, string eventName, Dictionary<string, object?> tags)
+        {
+            using var activity = ActivitySource.StartActivity(activityName);
+            activity?.AddEvent(new ActivityEvent(eventName, tags: new ActivityTagsCollection(tags)));
+        }
+    }
+
     public static class TagKey
     {
         public static class MediatR
         {
-            public const string REQUEST_TYPE = "jwt_api.mediatr.request.type";
-            public const string REQUEST_VALUE = "jwt_api.mediatr.request.value";
+            public const string REQUEST_TYPE = "auth_api.mediatr.request.type";
+            public const string REQUEST_VALUE = "auth_api.mediatr.request.value";
         }
     }
 

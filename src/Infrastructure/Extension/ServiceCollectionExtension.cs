@@ -1,6 +1,6 @@
 ﻿using Application.ApiClient;
+using Application.Common.DevelopmentMock;
 using Application.Service;
-using Azure.Core;
 using gitViwe.ProblemDetail;
 using gitViwe.ProblemDetail.Base;
 using Infrastructure.ApiClient;
@@ -233,8 +233,13 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
+        if (!environment.IsProduction())
+        {
+            return services.AddScoped<IImageHostingClient>(_ => new LocalImageHostingClient(Path.Combine(environment.WebRootPath, "user/user-image")));
+        }
+
         services.AddHttpClient<IImageHostingClient, ImgBBClient>(client =>
         {
             client.BaseAddress = new Uri(configuration[HubConfigurations.APIClient.ImgBB.BaseUrl]!);
@@ -249,7 +254,7 @@ internal static class ServiceCollectionExtension
 
         services.AddOpenTelemetry().WithTracing(builder =>
         {
-            builder//.AddSource("MDRT")
+            builder.AddSource("MediatR")
                    .SetResourceBuilder(resource)
                    .AddHttpClientInstrumentation(options =>
                    {

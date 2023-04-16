@@ -9,7 +9,7 @@ namespace Infrastructure;
 
 public static class ConfigureServices
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
         services.AddApplicationServices(configuration)
             .RegisterServiceImplementation()
@@ -17,7 +17,7 @@ public static class ConfigureServices
             .RegisterIdentity()
             .RegisterAuthentication(configuration, environment)
             .RegisterCors(configuration, environment)
-            .RegisterHttpClient(configuration)
+            .RegisterHttpClient(configuration, environment)
             .RegisterOpenTelemetry(configuration, environment);
 
         return services;

@@ -1,5 +1,4 @@
 ﻿using Shared.Constant;
-using System.Diagnostics;
 
 namespace Application.Common.Behaviour;
 
@@ -8,10 +7,13 @@ internal class OpenTelemetryBehaviour<TRequest, TResponse> : IPipelineBehavior<T
 {
     public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        var activity = Activity.Current ?? default;
-        activity?.AddEvent(new ActivityEvent("Processing MediatR Request."));
-        activity?.SetTag(HubOpenTelemetry.TagKey.MediatR.REQUEST_TYPE, request.GetType().Name);
-        activity?.SetTag(HubOpenTelemetry.TagKey.MediatR.REQUEST_VALUE, HubOpenTelemetry.ObfuscateSensitiveData(request));
+        Dictionary<string, object?> tagDictionary = new()
+        {
+            { HubOpenTelemetry.TagKey.MediatR.REQUEST_TYPE, request.GetType().Name },
+            { HubOpenTelemetry.TagKey.MediatR.REQUEST_VALUE, HubOpenTelemetry.ObfuscateSensitiveData(request) },
+        };
+
+        HubOpenTelemetry.MediatRActivitySource.StartActivity("PipelineBehavior", "Starting MediatR Request.", tagDictionary);
 
         return next();
     }
