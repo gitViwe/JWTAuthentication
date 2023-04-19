@@ -14,4 +14,13 @@ public interface IImageHostingClient
     /// <param name="file">The form file to upload</param>
     /// <returns>A <seealso cref="ImgBBUploadResponse"/> instance with the upload details</returns>
     Task<ImgBBUploadResponse> UploadImageAsync(IFormFile file);
+
+    /// <summary>
+    /// Upload the image file
+    /// </summary>
+    /// <param name="httpContent">The content body to upload</param>
+    /// <param name="fileName">The full name of the image file</param>
+    /// <param name="expirationInSeconds">The expiration time in seconds</param>
+    /// <returns>A <seealso cref="ImgBBUploadResponse"/> instance with the upload details</returns>
+    Task<ImgBBUploadResponse> UploadImageAsync(HttpContent httpContent, string fileName, int expirationInSeconds = 300);
 }

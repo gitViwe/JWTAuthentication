@@ -63,7 +63,11 @@ internal class HubIdentityService : IHubIdentityService
         user.TOTPKey = Base32Encoding.ToString(secretKey);
         await _userManager.UpdateAsync(user);
 
-        var response = new QrCodeImageResponse() { QrCodeImage = _tOTPService.GenerateQrCode(user.Email, secretKey, _configuration.ApplicationName) };
+        var response = new QrCodeImageResponse()
+        {
+            QrCodeImage = _tOTPService.GenerateQrCode(user.Email, secretKey,
+            _configuration.ApplicationName)
+        };
 
         return Response<QrCodeImageResponse>.Success("QrCode created.", response);
     }
