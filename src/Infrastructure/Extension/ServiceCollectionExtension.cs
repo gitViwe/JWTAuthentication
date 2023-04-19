@@ -254,14 +254,12 @@ internal static class ServiceCollectionExtension
 
         services.AddOpenTelemetry().WithTracing(builder =>
         {
-            builder.AddSource("MediatR")
+            builder.AddSource(HubOpenTelemetry.Source.MEDIATR)
                    .SetResourceBuilder(resource)
                    .AddHttpClientInstrumentation(options =>
                    {
                        options.RecordException = true;
-
                        options.EnrichWithException = (activity, exception) => activity?.RecordException(exception);
-
                        options.EnrichWithHttpRequestMessage = (activity, request) =>
                        {
                            string absPath = request.RequestUri?.AbsolutePath ?? string.Empty;
@@ -271,19 +269,12 @@ internal static class ServiceCollectionExtension
                            }
                        };
                    })
-                   .AddEntityFrameworkCoreInstrumentation()
+                   .AddEntityFrameworkCoreInstrumentation(x => x.SetDbStatementForText = true)
                    .AddAspNetCoreInstrumentation(options =>
                    {
                        options.RecordException = true;
+                       options.EnrichWithException = (activity, exception) => activity.RecordException(exception);
                        options.Filter = (context) => !HubOpenTelemetry.AspNetCoreInstrumentation.FilterUrls.Contains(context.Request.Path.Value);
-                       options.EnrichWithHttpResponse = (activity, response) =>
-                       {
-                           var handlerFeature = response.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
-                           if (handlerFeature is not null)
-                           {
-                               activity?.RecordException(handlerFeature.Error);
-                           }
-                       };
 
                    });
 
