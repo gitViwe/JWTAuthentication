@@ -25,11 +25,29 @@ public static class HubOpenTelemetry
     public static class Source
     {
         public const string MEDIATR = "MediatR";
+        public const string AUTHAPI = "AuthenticationAPI";
     }
 
     public static class MediatRActivitySource
     {
         private static readonly ActivitySource ActivitySource = new("MediatR");
+
+        public static void StartActivity(string activityName, string eventName, Dictionary<string, object?> tags)
+        {
+            using var activity = ActivitySource.StartActivity(activityName);
+            activity?.AddEvent(new ActivityEvent(eventName, tags: new ActivityTagsCollection(tags)));
+        }
+    }
+
+    public static class AuthAPIActivitySource
+    {
+        private static readonly ActivitySource ActivitySource = new("AuthenticationAPI");
+
+        public static void StartActivity(string activityName, string eventName)
+        {
+            using var activity = ActivitySource.StartActivity(activityName);
+            activity?.AddEvent(new ActivityEvent(eventName));
+        }
 
         public static void StartActivity(string activityName, string eventName, Dictionary<string, object?> tags)
         {
@@ -46,6 +64,13 @@ public static class HubOpenTelemetry
             public const string REQUEST_VALUE = "auth_api.mediatr.request.value";
             public const string RESPONSE_STATUS_CODE = "auth_api.mediatr.response.status_code";
             public const string RESPONSE_MESSAGE = "auth_api.mediatr.response.value";
+        }
+
+        public static class HubUser
+        {
+            public const string USER_ID = "user_id";
+            public const string USER_NAME = "user_name";
+            public const string USER_EMAIL = "user_email";
         }
     }
 

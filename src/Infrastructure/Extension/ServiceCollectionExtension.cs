@@ -25,6 +25,7 @@ using OpenTelemetry.Trace;
 using Shared.Constant;
 using System.Diagnostics;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
@@ -144,6 +145,7 @@ internal static class ServiceCollectionExtension
             {
                 OnAuthenticationFailed = context =>
                 {
+                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnAuthenticationFailed");
                     DefaultProblemDetails response;
 
                     // JWT token has expired
@@ -155,6 +157,7 @@ internal static class ServiceCollectionExtension
                 },
                 OnChallenge = context =>
                 {
+                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnChallenge");
                     context.HandleResponse();
                     if (!context.Response.HasStarted)
                     {
@@ -166,9 +169,27 @@ internal static class ServiceCollectionExtension
                 },
                 OnForbidden = context =>
                 {
+                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnForbidden");
                     var response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status403Forbidden, ErrorDescription.Authorization.Unauthorized);
                     return context.Response.WriteAsync(JsonSerializer.Serialize(response));
                 },
+                OnTokenValidated = context =>
+                {
+                    string userId = context?.Principal?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                    string username = context?.Principal?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value ?? string.Empty;
+                    string email = context?.Principal?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value ?? string.Empty;
+
+                    Dictionary<string, object?> authTagDictionary = new()
+                    {
+                        { HubOpenTelemetry.TagKey.HubUser.USER_ID, userId },
+                        { HubOpenTelemetry.TagKey.HubUser.USER_NAME, username },
+                        { HubOpenTelemetry.TagKey.HubUser.USER_EMAIL, email },
+                    };
+
+                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnTokenValidated", authTagDictionary);
+
+                    return Task.CompletedTask;
+                }
             };
         });
 
@@ -254,7 +275,7 @@ internal static class ServiceCollectionExtension
 
         services.AddOpenTelemetry().WithTracing(builder =>
         {
-            builder.AddSource(HubOpenTelemetry.Source.MEDIATR)
+            builder.AddSource(HubOpenTelemetry.Source.MEDIATR, HubOpenTelemetry.Source.AUTHAPI)
                    .SetResourceBuilder(resource)
                    .AddHttpClientInstrumentation(options =>
                    {
