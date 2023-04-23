@@ -20,19 +20,10 @@ internal class ImgBBClient : IImageHostingClient
         UploadEndpoint = $"1/upload?key={configuration[HubConfigurations.APIClient.ImgBB.APIKey]}";
     }
 
-    public async Task<ImgBBUploadResponse> UploadImageAsync(IFormFile file)
+    public Task<ImgBBUploadResponse> UploadImageAsync(IFormFile file)
     {
-        string endpoint = UploadEndpoint + $"&expiration={_configuration[HubConfigurations.APIClient.ImgBB.Expiration]}";
-        var content = new MultipartFormDataContent
-        {
-            { new StreamContent(file.OpenReadStream()), "image", file.FileName }
-        };
-
-        var result = await _httpClient.PostAsync(endpoint, content);
-
-        result.EnsureSuccessStatusCode();
-
-        return await result.ToResponseAsync<ImgBBUploadResponse>();
+        int expirationInSeconds = int.Parse(_configuration[HubConfigurations.APIClient.ImgBB.Expiration]!);
+        return UploadImageAsync(new StreamContent(file.OpenReadStream()), file.FileName, expirationInSeconds);
     }
 
     public async Task<ImgBBUploadResponse> UploadImageAsync(HttpContent httpContent, string fileName, int expirationInSeconds = 300)

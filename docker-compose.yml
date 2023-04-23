@@ -14,14 +14,14 @@ services:
       - 5161:80
     depends_on:
       - postgres
+      - mongo
+      - jaeger
     restart: on-failure
 
   postgres:
     image: postgres:13-alpine
     hostname: postgres
     container_name: postgres
-    ports:
-      - "5432:5432"
     environment:
         POSTGRES_USER: "user"
         POSTGRES_PASSWORD: "pass"
@@ -31,8 +31,6 @@ services:
     hostname: mongo
     container_name: mongo
     restart: always
-    ports:
-      - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example

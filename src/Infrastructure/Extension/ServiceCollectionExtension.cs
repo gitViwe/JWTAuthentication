@@ -144,8 +144,8 @@ internal static class ServiceCollectionExtension
             {
                 OnAuthenticationFailed = context =>
                 {
-                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnAuthenticationFailed");
                     DefaultProblemDetails response;
+                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnAuthenticationFailed", context.Exception);
 
                     // JWT token has expired
                     response = context.Exception is SecurityTokenExpiredException
@@ -156,10 +156,10 @@ internal static class ServiceCollectionExtension
                 },
                 OnChallenge = context =>
                 {
-                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnChallenge");
                     context.HandleResponse();
                     if (!context.Response.HasStarted)
                     {
+                        HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnChallenge");
                         var response = ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status401Unauthorized, ErrorDescription.Authorization.Unauthorized);
                         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
                     }
