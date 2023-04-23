@@ -257,7 +257,7 @@ internal static class ServiceCollectionExtension
     {
         if (!environment.IsProduction())
         {
-            return services.AddScoped<IImageHostingClient>(_ => new LocalImageHostingClient(Path.Combine(environment.WebRootPath, "user/user-image")));
+            return services.AddScoped<IImageHostingClient>(_ => new LocalImageHostingClient(Path.Combine(environment.WebRootPath, "image", "user-image")));
         }
 
         services.AddHttpClient<IImageHostingClient, ImgBBClient>(client =>
@@ -274,7 +274,7 @@ internal static class ServiceCollectionExtension
 
         services.AddOpenTelemetry().WithTracing(builder =>
         {
-            builder.AddSource(HubOpenTelemetry.Source.MEDIATR, HubOpenTelemetry.Source.AUTHAPI)
+            builder.AddSource(HubOpenTelemetry.Source.MEDIATR, HubOpenTelemetry.Source.AUTHAPI, HubOpenTelemetry.Source.MONGODB)
                    .SetResourceBuilder(resource)
                    .AddHttpClientInstrumentation(options =>
                    {

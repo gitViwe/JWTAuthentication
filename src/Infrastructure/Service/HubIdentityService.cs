@@ -65,8 +65,7 @@ internal class HubIdentityService : IHubIdentityService
 
         var response = new QrCodeImageResponse()
         {
-            QrCodeImage = _tOTPService.GenerateQrCode(user.Email, secretKey,
-            _configuration.ApplicationName)
+            QrCodeImage = _tOTPService.GenerateQrCode(user.Email!, secretKey, _configuration.ApplicationName)
         };
 
         return Response<QrCodeImageResponse>.Success("QrCode created.", response);

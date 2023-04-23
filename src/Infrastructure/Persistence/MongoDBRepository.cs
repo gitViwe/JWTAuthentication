@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Extensions.DiagnosticSources;
 using Shared.Constant;
 
 namespace Infrastructure.Persistence;
@@ -16,7 +17,13 @@ internal class MongoDBRepository<TMongoDocument> where TMongoDocument : MongoDoc
 
     public MongoDBRepository(IConfiguration configuration)
     {
-        var database = new MongoClient(configuration.GetConnectionString(HubConfigurations.ConnectionString.MongoDb)!).GetDatabase("hub-db");
+        // https://github.com/jbogard/MongoDB.Driver.Core.Extensions.OpenTelemetry
+        var settings = MongoClientSettings.FromConnectionString(configuration.GetConnectionString(HubConfigurations.ConnectionString.MongoDb)!);
+        settings.ClusterConfigurator = builder =>
+        {
+            builder.Subscribe(new DiagnosticsActivityEventSubscriber());
+        };
+        var database = new MongoClient(settings).GetDatabase("hub-db");
         _collection = database.GetCollection<TMongoDocument>(GetCollectionName(typeof(TMongoDocument)));
     }
 

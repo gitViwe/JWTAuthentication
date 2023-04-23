@@ -26,6 +26,7 @@ public static class HubOpenTelemetry
     {
         public const string MEDIATR = "MediatR";
         public const string AUTHAPI = "AuthenticationAPI";
+        public const string MONGODB = "MongoDB.Driver.Core.Extensions.DiagnosticSources";
     }
 
     public static class MediatRActivitySource
@@ -63,7 +64,7 @@ public static class HubOpenTelemetry
             public const string REQUEST_TYPE = "auth_api.mediatr.request.type";
             public const string REQUEST_VALUE = "auth_api.mediatr.request.value";
             public const string RESPONSE_STATUS_CODE = "auth_api.mediatr.response.status_code";
-            public const string RESPONSE_MESSAGE = "auth_api.mediatr.response.value";
+            public const string RESPONSE_MESSAGE = "auth_api.mediatr.response.message";
         }
 
         public static class HubUser
