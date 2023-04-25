@@ -18,14 +18,6 @@ services:
       - jaeger
     restart: on-failure
 
-  postgres:
-    image: postgres:13-alpine
-    hostname: postgres
-    container_name: postgres
-    environment:
-        POSTGRES_USER: "user"
-        POSTGRES_PASSWORD: "pass"
-            
   mongo:
     image: mongo
     hostname: mongo
@@ -34,7 +26,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-
 
   mongo-express:
     image: mongo-express
