@@ -25,11 +25,7 @@ public static class ConfigureServices
 
     public static Task UseInfrastructureServicesAsync(this IHost host, IHostEnvironment environment)
     {
-        if (environment.IsEnvironment("Docker"))
-        {
-            return host.CreateDatabaseAsync();
-        }
-        else if (environment.IsDevelopment())
+        if (environment.IsDevelopment() || environment.IsEnvironment("Docker"))
         {
             return host.ApplyMigrationAsync();
         }

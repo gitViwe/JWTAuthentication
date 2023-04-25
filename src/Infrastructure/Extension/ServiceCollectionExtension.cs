@@ -47,12 +47,7 @@ internal static class ServiceCollectionExtension
     {
         return services.AddDbContext<HubDbContext>(options =>
         {
-            if (environment.IsEnvironment("Docker"))
-            {
-                // using an PostgreSQL provider
-                options.UseNpgsql(configuration.GetConnectionString(HubConfigurations.ConnectionString.PostgreSQL)!);
-            }
-            else if (environment.IsDevelopment())
+            if (environment.IsDevelopment() || environment.IsEnvironment("Docker"))
             {
                 // using an SQlite provider
                 options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
