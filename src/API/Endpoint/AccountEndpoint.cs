@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal;
-using Application.Feature.Identity.LoginUser;
+﻿using Application.Feature.Identity.LoginUser;
 using Application.Feature.Identity.LogoutUser;
 using Application.Feature.Identity.RefreshToken;
 using Application.Feature.Identity.RegisterUser;
@@ -13,6 +12,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Contract.Identity;
 using System.Net.Mime;
+using System.Security.Claims;
 
 namespace API.Endpoint;
 
@@ -103,7 +103,7 @@ public static class AccountEndpoint
         app.MapPut(Shared.Route.API.AcccountEndpoint.Detail, UpdateDetailsAsync)
             .WithName(nameof(UpdateDetailsAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<TokenResponse>(StatusCodes.Status200OK, contentType: MediaTypeNames.Application.Json)
+            .Produces(StatusCodes.Status200OK, contentType: MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json")
             .WithOpenApi(operation => new(operation)
@@ -115,7 +115,7 @@ public static class AccountEndpoint
         app.MapPost(Shared.Route.API.AcccountEndpoint.Picture, UploadImageAsync)
             .WithName(nameof(UploadImageAsync))
             .WithTags(Shared.Route.API.AcccountEndpoint.TAG_NAME)
-            .Produces<TokenResponse>(StatusCodes.Status200OK, contentType: MediaTypeNames.Application.Json)
+            .Produces(StatusCodes.Status200OK, contentType: MediaTypeNames.Application.Json)
             .ProducesProblem(StatusCodes.Status401Unauthorized, "application/problem+json")
             .ProducesValidationProblem(contentType: "application/problem+json")
             .WithOpenApi(operation => new(operation)
@@ -207,7 +207,7 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new TOTPAuthenticatorQrCodeQuery()
         {
-            UserId = accessor.HttpContext?.User.GetUserId()!,
+            UserId = accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
         }, token);
 
         return response.Succeeded
@@ -223,7 +223,7 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new TOTPAuthenticatorVerifyCommand()
         {
-            UserId = accessor.HttpContext?.User.GetUserId()!,
+            UserId = accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
             Token = request.Token
         }, token);
 
@@ -240,13 +240,13 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new UpdateUserRequestCommand()
         {
-            UserId = accessor.HttpContext?.User.GetUserId()!,
+            UserId = accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
             FirstName = request.FirstName,
             LastName = request.LastName,
         }, token);
 
         return response.Succeeded
-            ? Results.Ok(response.Data)
+            ? Results.Ok()
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
@@ -258,12 +258,12 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new UploadImageRequestCommand()
         {
-            UserId = accessor.HttpContext?.User.GetUserId()!,
+            UserId = accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
             File = file,
         }, token);
 
         return response.Succeeded
-            ? Results.Ok(response.Data)
+            ? Results.Ok()
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 
@@ -274,7 +274,7 @@ public static class AccountEndpoint
     {
         var response = await mediator.Send(new UserDetailQuery()
         {
-            UserId = accessor.HttpContext?.User.GetUserId()!,
+            UserId = accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)!,
         }, token);
 
         return response.Succeeded

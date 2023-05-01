@@ -1,4 +1,4 @@
-﻿using Infrastructure.Persistence.Configuration;
+﻿using gitViwe.Shared.MongoDB.Base;
 using Shared.Contract.ApiClient;
 
 namespace Infrastructure.Persistence.Entity;

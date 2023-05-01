@@ -11,28 +11,28 @@ public interface IHubIdentityService
     /// Register a new user on the system
     /// </summary>
     /// <param name="request">This is the required user information to register</param>
-    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse<TokenResponse>> RegisterAsync(RegisterRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Request a new token if the current token is invalid or expired
     /// </summary>
     /// <param name="request">This is the required user information to request a new token</param>
-    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse<TokenResponse>> RefreshToken(TokenRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> RefreshToken(TokenRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Login an existing system user
     /// </summary>
     /// <param name="request">This is the required user information to login</param>
-    /// /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="TokenResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken token);
+    Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Logout the current system user
@@ -56,37 +56,37 @@ public interface IHubIdentityService
     /// </summary>
     /// <param name="userId">The user's user id</param>
     /// <param name="totp">The user's TOTP</param>
-    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
     /// <returns>The response message</returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse> ValidateTOTPAsync(string userId, string totp, CancellationToken token);
+    Task<IResponse> ValidateTOTPAsync(string userId, string totp, CancellationToken cancellationToken);
 
     /// <summary>
     /// Updates the user's first name and last name
     /// </summary>
     /// <param name="userId">The user's user id</param>
     /// <param name="request">The current user's details</param>
-    /// <param name="token">Propagates notification that operations should be cancelled</param>
-    /// <returns>The <see cref="TokenResponse"/></returns>
+    /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
+    /// <returns>The response message</returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse<TokenResponse>> UpdateUserAsync(string userId, UpdateUserRequest request, CancellationToken token);
+    Task<IResponse> UpdateUserAsync(string userId, UpdateUserRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Updates the user's profile image
     /// </summary>
     /// <param name="userId">The user's user id</param>
     /// <param name="request">The current user's details</param>
-    /// <param name="token">Propagates notification that operations should be cancelled</param>
-    /// <returns>The <see cref="TokenResponse"/></returns>
+    /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
+    /// <returns>The response message</returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse<TokenResponse>> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken token);
+    Task<IResponse> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Get the current user's details
     /// </summary>
     /// <param name="userId">The user's user id</param>
-    /// <param name="token">Propagates notification that operations should be cancelled</param>
+    /// <param name="cancellationToken">Propagates notification that operations should be cancelled</param>
     /// <returns>The <see cref="UserDetailResponse"/></returns>
     /// <exception cref="UnauthorizedException"></exception>
-    Task<IResponse<UserDetailResponse>> GetUserDetailAsync(string userId, CancellationToken token);
+    Task<IResponse<UserDetailResponse>> GetUserDetailAsync(string userId, CancellationToken cancellationToken);
 }

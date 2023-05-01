@@ -11,13 +11,13 @@ public static class ConfigureServices
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
-        services.AddApplicationServices(configuration)
-            .RegisterServiceImplementation()
+        services.AddApplicationServices()
+            .RegisterServiceImplementation(configuration, environment)
             .RegisterDatabaseContext(configuration, environment)
             .RegisterIdentity()
             .RegisterAuthentication(configuration, environment)
             .RegisterCors(configuration, environment)
-            .RegisterHttpClient(configuration, environment)
+            .RegisterHttpClient(configuration)
             .RegisterOpenTelemetry(configuration, environment);
 
         return services;

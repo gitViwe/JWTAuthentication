@@ -1,6 +1,4 @@
 ﻿using Application.Common.Behaviour;
-using Application.Configuration;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -17,13 +15,6 @@ internal static class ServiceCollectionExtension
             config.AddOpenBehavior(typeof(ValidationBehaviour<,>));
         });
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
-        return services;
-    }
-
-    internal static IServiceCollection AddAppplicationSettingsSection(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<APIConfiguration>(configuration.GetSection(nameof(APIConfiguration)));
 
         return services;
     }

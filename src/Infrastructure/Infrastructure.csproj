@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="gitViwe.Shared.ProblemDetail.Extension" Version="1.4.5" />
+    <PackageReference Include="gitViwe.Shared.Authentication" Version="1.4.10" />
+    <PackageReference Include="gitViwe.Shared.MongoDB" Version="1.4.8" />
+    <PackageReference Include="gitViwe.Shared.ProblemDetail.Extension" Version="1.4.7" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="7.0.5" />
@@ -28,7 +30,7 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.14" />
     <PackageReference Include="Otp.NET" Version="1.3.0" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.29.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.0" />
   </ItemGroup>
 
 </Project>

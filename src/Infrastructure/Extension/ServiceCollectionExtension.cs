@@ -1,13 +1,5 @@
 ﻿using Application.ApiClient;
-using Application.Common.DevelopmentMock;
-using Application.Service;
-using gitViwe.ProblemDetail;
-using gitViwe.ProblemDetail.Base;
-using Infrastructure.ApiClient;
-using Infrastructure.Identity;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entity;
-using Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -19,26 +11,92 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
+using MongoDB.Driver.Core.Extensions.DiagnosticSources;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Shared.Constant;
 using System.Diagnostics;
 using System.Reflection;
-using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 
 namespace Infrastructure.Extension;
 
 internal static class ServiceCollectionExtension
 {
-    internal static IServiceCollection RegisterServiceImplementation(this IServiceCollection services)
+    private static TokenValidationParameters CreateTokenValidationParameters(IConfiguration configuration, IHostEnvironment environment)
     {
-        services.AddScoped(typeof(MongoDBRepository<>));
+        // get the JWT key from the APP settings file
+        var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
+
+        return new TokenValidationParameters
+        {
+            ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
+            ValidAudiences = new string[]
+            {
+                configuration[HubConfigurations.API.ServerUrl]!,
+                configuration[HubConfigurations.API.ClientUrl]!
+            },
+            // specify the security key used for 
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            // validates the signature of the key
+            ValidateIssuerSigningKey = true,
+            ValidateAudience = environment.IsProduction(),
+            ValidateIssuer = environment.IsProduction(),
+        };
+    }
+
+    private static RefreshTokenValidationParameters CreateRefreshTokenValidationParameters(IConfiguration configuration, IHostEnvironment environment)
+    {
+        // get the JWT key from the APP settings file
+        var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
+
+        // create the parameters used to validate refreshing tokens
+        var refreshTokenValidationParams = new TokenValidationParameters
+        {
+            ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
+            ValidAudiences = new string[]
+            {
+                configuration[HubConfigurations.API.ServerUrl]!,
+                configuration[HubConfigurations.API.ClientUrl]!
+            },
+            // specify the security key used for 
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            // validates the signature of the key
+            ValidateIssuerSigningKey = true,
+            ValidateAudience = environment.IsProduction(),
+            ValidateIssuer = environment.IsProduction(),
+            // do not validate token expiry
+            ValidateLifetime = false,
+        };
+
+        return new RefreshTokenValidationParameters(refreshTokenValidationParams);
+    }
+
+    internal static IServiceCollection RegisterServiceImplementation(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    {
         services.AddScoped<ISuperHeroService, SuperHeroService>();
-        services.AddTransient<ITimeBasedOTPService, TimeBasedOTPService>();
-        services.AddTransient<IJsonWebTokenService, JsonWebTokenService>();
         services.AddTransient<IHubIdentityService, HubIdentityService>();
+        services.AddGitViweTimeBasedOTPService();
+        services.AddGitViweMongoDBRepository(options =>
+        {
+            // https://github.com/jbogard/MongoDB.Driver.Core.Extensions.OpenTelemetry
+            var settings = MongoClientSettings.FromConnectionString(configuration.GetConnectionString(HubConfigurations.ConnectionString.MongoDb)!);
+            settings.ClusterConfigurator = builder => builder.Subscribe(new DiagnosticsActivityEventSubscriber());
+
+            options.MongoClientSettings = settings;
+            options.DatabaseName = "hub-db";
+        });
+        services.AddGitViweSecurityTokenService(options =>
+        {
+            var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
+
+            options.Audience = configuration[HubConfigurations.API.ClientUrl]!;
+            options.Issuer = configuration[HubConfigurations.API.ServerUrl]!;
+            options.RefreshValidationParameters = CreateRefreshTokenValidationParameters(configuration, environment);
+            options.SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
+            options.TokenExpiry = TimeSpan.FromMinutes(int.Parse(configuration[HubConfigurations.API.TokenExpityInMinutes]!));
+            options.ValidationParameters = CreateTokenValidationParameters(configuration, environment);
+        });
 
         return services;
     }
@@ -78,48 +136,16 @@ internal static class ServiceCollectionExtension
 
     internal static IServiceCollection RegisterAuthentication(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        // get the JWT key from the APP settings file
-        var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
-
         // create the parameters used to validate
-        var tokenValidationParams = new TokenValidationParameters
-        {
-            ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
-            ValidAudiences = new string[]
-            {
-                configuration[HubConfigurations.API.ServerUrl]!,
-                configuration[HubConfigurations.API.ClientUrl]!
-            },
-            // specify the security key used for 
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            // validates the signature of the key
-            ValidateIssuerSigningKey = true,
-            ValidateAudience = environment.IsProduction(),
-            ValidateIssuer = environment.IsProduction(),
-        };
+        var tokenValidationParams = CreateTokenValidationParameters(configuration, environment);
 
         // add Token Validation Parameters as singleton service
         services.AddSingleton(tokenValidationParams);
 
         // create the parameters used to validate refreshing tokens
-        var refreshTokenValidationParams = new TokenValidationParameters
-        {
-            ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
-            ValidAudiences = new string[]
-            {
-                configuration[HubConfigurations.API.ServerUrl]!,
-                configuration[HubConfigurations.API.ClientUrl]!
-            },
-            // specify the security key used for 
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            // validates the signature of the key
-            ValidateIssuerSigningKey = true,
-            ValidateAudience = environment.IsProduction(),
-            ValidateIssuer = environment.IsProduction(),
-            // do not validate token expiry
-            ValidateLifetime = false,
-        };
-        services.AddSingleton(new RefreshTokenValidationParameters(refreshTokenValidationParams));
+        var refreshTokenValidationParams = CreateRefreshTokenValidationParameters(configuration, environment);
+
+        services.AddSingleton(refreshTokenValidationParams);
 
         // configures authentication using JWT
         services.AddAuthentication(options =>
@@ -169,15 +195,12 @@ internal static class ServiceCollectionExtension
                 },
                 OnTokenValidated = context =>
                 {
-                    string userId = context?.Principal?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-                    string username = context?.Principal?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value ?? string.Empty;
-                    string email = context?.Principal?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value ?? string.Empty;
-
                     Dictionary<string, object?> authTagDictionary = new()
                     {
-                        { HubOpenTelemetry.TagKey.HubUser.USER_ID, userId },
-                        { HubOpenTelemetry.TagKey.HubUser.USER_NAME, username },
-                        { HubOpenTelemetry.TagKey.HubUser.USER_EMAIL, email },
+                        { HubOpenTelemetry.TagKey.HubUser.USER_ID, context?.Principal?.FindFirstValue(ClaimTypes.NameIdentifier) },
+                        { HubOpenTelemetry.TagKey.HubUser.JWT_ID, context?.Principal?.GetTokenID() },
+                        { HubOpenTelemetry.TagKey.HubUser.JWT_ISSUER, context?.Principal?.FindFirstValue(JwtRegisteredClaimNames.Iss) },
+                        { HubOpenTelemetry.TagKey.HubUser.JWT_AUDIENCE, context?.Principal?.FindFirstValue(JwtRegisteredClaimNames.Aud) },
                     };
 
                     HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnTokenValidated", authTagDictionary);
@@ -248,13 +271,8 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
+    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration)
     {
-        if (!environment.IsProduction())
-        {
-            return services.AddScoped<IImageHostingClient>(_ => new LocalImageHostingClient(Path.Combine(environment.WebRootPath, "image", "user-image")));
-        }
-
         services.AddHttpClient<IImageHostingClient, ImgBBClient>(client =>
         {
             client.BaseAddress = new Uri(configuration[HubConfigurations.APIClient.ImgBB.BaseUrl]!);
