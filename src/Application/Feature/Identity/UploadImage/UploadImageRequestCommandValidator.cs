@@ -11,8 +11,5 @@ public class UploadImageRequestCommandValidator : AbstractValidator<UploadImageR
 
         RuleFor(x => x.File.Length)
             .LessThanOrEqualTo(5242880).WithMessage("The maximum allowed file size is " + Formatter.FormatSize(5242880));
-
-        RuleFor(x => x.File.ContentType)
-            .Equal("image/jpeg").WithMessage("Only image files with the extension [.jpg] are allowed.");
     }
 }

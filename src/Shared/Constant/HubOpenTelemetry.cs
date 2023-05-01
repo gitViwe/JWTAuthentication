@@ -83,8 +83,9 @@ public static class HubOpenTelemetry
         public static class HubUser
         {
             public const string USER_ID = "user_id";
-            public const string USER_NAME = "user_name";
-            public const string USER_EMAIL = "user_email";
+            public const string JWT_ID = "jwt_id";
+            public const string JWT_ISSUER = "jwt_issuer";
+            public const string JWT_AUDIENCE = "jwt_audience";
         }
     }
 

@@ -1,0 +1,16 @@
+﻿global using Application.Service;
+global using gitViwe.Shared;
+global using gitViwe.Shared.Authentication;
+global using gitViwe.Shared.Extension;
+global using gitViwe.Shared.MongoDB;
+global using Shared.Constant;
+global using Shared.Contract;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Claims;
+global using System.Text;
+global using gitViwe.ProblemDetail;
+global using gitViwe.ProblemDetail.Base;
+global using Infrastructure.ApiClient;
+global using Infrastructure.Identity;
+global using Infrastructure.Persistence;
+global using Infrastructure.Service;

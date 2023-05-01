@@ -1,21 +1,12 @@
 ﻿using Application.ApiClient;
-using Application.Configuration;
-using Application.Service;
-using gitViwe.Shared;
-using gitViwe.Shared.Extension;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using OtpNet;
-using Shared.Constant;
 using Shared.Contract.Identity;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace Infrastructure.Service;
 
@@ -23,55 +14,59 @@ internal class HubIdentityService : IHubIdentityService
 {
     private readonly UserManager<HubIdentityUser> _userManager;
     private readonly RoleManager<HubIdentityRole> _roleManager;
-    private readonly IJsonWebTokenService _tokenService;
-    private readonly ITimeBasedOTPService _tOTPService;
-    private readonly APIConfiguration _configuration;
     private readonly ILogger<HubIdentityService> _logger;
     private readonly IImageHostingClient _imageHosting;
-    private readonly MongoDBRepository<HubIdentityUserData> _userDataRepository;
+    private readonly IMongoDBRepository<HubIdentityUserData> _userDataRepository;
     private readonly HubDbContext _dbContext;
+    private readonly ITimeBasedOTPService _timeBasedOTP;
+    private readonly IConfiguration _configuration;
+    private readonly ISecurityTokenService _tokenService;
+    private readonly IHttpContextAccessor _contextAccessor;
 
     public HubIdentityService(
         UserManager<HubIdentityUser> userManager,
-        IJsonWebTokenService tokenService,
-        ITimeBasedOTPService tOTPService,
-        IOptionsMonitor<APIConfiguration> optionsMonitor,
         ILogger<HubIdentityService> logger,
         IImageHostingClient imageHosting,
-        MongoDBRepository<HubIdentityUserData> userDataRepository,
+        IMongoDBRepository<HubIdentityUserData> userDataRepository,
         RoleManager<HubIdentityRole> roleManager,
-        HubDbContext dbContext)
+        HubDbContext dbContext,
+        ITimeBasedOTPService timeBasedOTP,
+        IConfiguration configuration,
+        ISecurityTokenService tokenService,
+        IHttpContextAccessor contextAccessor)
     {
         _userManager = userManager;
         _tokenService = tokenService;
-        _tOTPService = tOTPService;
-        _configuration = optionsMonitor.CurrentValue;
+        _contextAccessor = contextAccessor;
         _logger = logger;
         _imageHosting = imageHosting;
         _userDataRepository = userDataRepository;
         _roleManager = roleManager;
         _dbContext = dbContext;
+        _timeBasedOTP = timeBasedOTP;
+        _configuration = configuration;
+        _tokenService = tokenService;
     }
 
-    public async Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken token)
+    public async Task<IResponse<QrCodeImageResponse>> GetQrCodeImageAsync(QrCodeImageRequest request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(request.UserId)
             ?? throw new UnauthorizedException($"User with Id: [{request.UserId}] does not exist.");
 
-        // Generate a random secret key for the user.
-        var secretKey = KeyGeneration.GenerateRandomKey(32);
-        user.TOTPKey = Base32Encoding.ToString(secretKey);
-        await _userManager.UpdateAsync(user);
+        var qrCodeData = _timeBasedOTP.GenerateQrCodeData(user.UserName!, _configuration[HubConfigurations.API.ApplicationName]!, out string secretKey);
+        user.TOTPKey = secretKey;
 
         var response = new QrCodeImageResponse()
         {
-            QrCodeImage = _tOTPService.GenerateQrCode(user.Email!, secretKey, _configuration.ApplicationName)
+            QrCodeImage = _timeBasedOTP.GetGraphicAsByteArray(qrCodeData),
         };
+
+        await _userManager.UpdateAsync(user);
 
         return Response<QrCodeImageResponse>.Success("QrCode created.", response);
     }
 
-    public async Task<IResponse> ValidateTOTPAsync(string userId, string totp, CancellationToken token)
+    public async Task<IResponse> ValidateTOTPAsync(string userId, string totp, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
@@ -81,7 +76,7 @@ internal class HubIdentityService : IHubIdentityService
             return Response.Fail("Invalid details.");
         }
 
-        if (!_tOTPService.VerifyTOTP(Base32Encoding.ToBytes(user.TOTPKey), totp))
+        if (_timeBasedOTP.VerifyTOTP(user.TOTPKey, totp) == false)
         {
             return Response.Fail("Invalid details.");
         }
@@ -97,79 +92,118 @@ internal class HubIdentityService : IHubIdentityService
         return Response.Success("The TOTP has been verified successfully.");
     }
 
-    public async Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken token)
+    public async Task<IResponse<TokenResponse>> LoginUserAsync(LoginRequest request, CancellationToken cancellationToken)
     {
-        // verify if email is registered
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
 
         if (existingUser is not null)
         {
-            // verify that the password is valid
             if (await _userManager.CheckPasswordAsync(existingUser, request.Password))
             {
-                // get claims principal from user
                 var claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser);
 
-                return Response<TokenResponse>.Success("Login successful.", _tokenService.GenerateToken(claimsPrincipal));
+                var securityToken = _tokenService.CreateToken(claimsPrincipal.Claims, GetAudienceUrl());
+
+                var refreshToken = CreateRefreshToken(securityToken.Id, existingUser.Id);
+
+                var response = new TokenResponse()
+                {
+                    RefreshToken = refreshToken.Token,
+                    Token = _tokenService.WriteToken(securityToken),
+                };
+
+                _dbContext.RefreshTokens.Add(refreshToken);
+                _dbContext.SaveChanges();
+
+                return Response<TokenResponse>.Success("Login successful.", response);
             }
         }
 
         return Response<TokenResponse>.Fail("Login details invalid.", StatusCodes.Status401Unauthorized);
     }
 
-    public Task LogoutUserAsync(string tokenId, CancellationToken token)
+    public async Task LogoutUserAsync(string tokenId, CancellationToken cancellationToken)
     {
-        _tokenService.FlagAsRevokedToken(tokenId);
-        return Task.CompletedTask;
+        var refreshToken = await _dbContext.RefreshTokens.FirstOrDefaultAsync(x => x.JwtId == tokenId, cancellationToken);
+        if (refreshToken is not null)
+        {
+            refreshToken.IsRevoked = true;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
-    public async Task<IResponse<TokenResponse>> RefreshToken(TokenRequest request, CancellationToken token)
+    public async Task<IResponse<TokenResponse>> RefreshToken(TokenRequest request, CancellationToken cancellationToken)
     {
-        var claimsPrincipal = _tokenService.ValidateToken(request, isRefreshToken: true);
+        var claimsPrincipal = _tokenService.ValidateToken(request.Token, isRefreshToken: true);
 
         // mark refresh token as used
-        _tokenService.FlagAsUsedToken(claimsPrincipal.GetTokenID());
+        var refreshToken = await ValidateRefreshTokenAsync(claimsPrincipal, request.RefreshToken, cancellationToken);
+        refreshToken.IsRevoked = true;
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // verify if email is registered
         var existingUser = await _userManager.FindByIdAsync(claimsPrincipal.GetUserId());
 
         if (existingUser is not null)
         {
-            // get claims principal from user
             claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser);
 
-            return Response<TokenResponse>.Success("Token refresh successful.", _tokenService.GenerateToken(claimsPrincipal));
+            var securityToken = _tokenService.CreateToken(claimsPrincipal.Claims, GetAudienceUrl());
+
+            var newRefreshToken = CreateRefreshToken(securityToken.Id, existingUser.Id);
+
+            var response = new TokenResponse()
+            {
+                RefreshToken = newRefreshToken.Token,
+                Token = _tokenService.WriteToken(securityToken),
+            };
+
+            _dbContext.RefreshTokens.Add(newRefreshToken);
+            _dbContext.SaveChanges();
+
+            return Response<TokenResponse>.Success("Token refresh successful.", response);
         }
 
         return Response<TokenResponse>.Fail("Token refresh failed, please login again.", StatusCodes.Status401Unauthorized);
     }
 
-    public async Task<IResponse<TokenResponse>> RegisterAsync(RegisterRequest request, CancellationToken token)
+    public async Task<IResponse<TokenResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
-        // verify if email is already registered
         if (await _userManager.FindByEmailAsync(request.Email) is not null)
         {
             return Response<TokenResponse>.Fail("This email is already registered.", StatusCodes.Status401Unauthorized);
         }
-        // create identity user object
+
         var newUser = new HubIdentityUser { Email = request.Email, UserName = request.UserName };
-        // register new user using request details
+
         var result = await _userManager.CreateAsync(newUser, request.Password);
-        // continue if user has been created
+
         if (!result.Succeeded)
         {
             _logger.LogWarning("Registration attempt failed with result: {result}", result);
             return Response<TokenResponse>.Fail("Unable to create your account at this time.", StatusCodes.Status401Unauthorized);
         }
-        // add required permission
+
         await _userManager.AddClaimAsync(newUser, new Claim(HubClaimTypes.Permission, HubPermissions.Profile.Manage));
-        // get claims principal from user
+
         var claimsPrincipal = await CreateClaimsPrincipalAsync(newUser);
 
-        return Response<TokenResponse>.Success("Registration successful.", _tokenService.GenerateToken(claimsPrincipal));
+        var securityToken = _tokenService.CreateToken(claimsPrincipal.Claims, GetAudienceUrl());
+
+        var refreshToken = CreateRefreshToken(securityToken.Id, newUser.Id);
+
+        var response = new TokenResponse()
+        {
+            RefreshToken = refreshToken.Token,
+            Token = _tokenService.WriteToken(securityToken),
+        };
+
+        _dbContext.RefreshTokens.Add(refreshToken);
+        _dbContext.SaveChanges();
+
+        return Response<TokenResponse>.Success("Registration successful.", response);
     }
 
-    public async Task<IResponse<TokenResponse>> UpdateUserAsync(string userId, UpdateUserRequest request, CancellationToken token)
+    public async Task<IResponse> UpdateUserAsync(string userId, UpdateUserRequest request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
@@ -179,13 +213,10 @@ internal class HubIdentityService : IHubIdentityService
 
         await UpdateUserAsync(user);
 
-        // get claims principal from user
-        var claimsPrincipal = await CreateClaimsPrincipalAsync(user);
-
-        return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
+        return Response.Success("User details updated.");
     }
 
-    public async Task<IResponse<TokenResponse>> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken token)
+    public async Task<IResponse> UploadImageAsync(string userId, UploadImageRequest request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
@@ -193,19 +224,16 @@ internal class HubIdentityService : IHubIdentityService
         var uploadResult = await _imageHosting.UploadImageAsync(request.File);
         var userData = new HubIdentityUserData { ProfileImage = uploadResult, };
 
-        await _userDataRepository.ReplaceOneAsync(userData);
+        await _userDataRepository.ReplaceOneAsync(userData, cancellationToken);
 
         user.HubIdentityUserDataId = userData.Id.ToString();
 
         await UpdateUserAsync(user);
 
-        // get claims principal from user
-        var claimsPrincipal = await CreateClaimsPrincipalAsync(user, userData);
-        // create JWT token
-        return Response<TokenResponse>.Success("User details updated.", _tokenService.GenerateToken(claimsPrincipal));
+        return Response.Success("User details updated.");
     }
 
-    public async Task<IResponse<UserDetailResponse>> GetUserDetailAsync(string userId, CancellationToken token)
+    public async Task<IResponse<UserDetailResponse>> GetUserDetailAsync(string userId, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new UnauthorizedException($"User with Id: [{userId}] does not exist.");
@@ -220,7 +248,7 @@ internal class HubIdentityService : IHubIdentityService
 
         if (!string.IsNullOrEmpty(user.HubIdentityUserDataId))
         {
-            var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId);
+            var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId, cancellationToken);
 
             if (userData is not null)
             {
@@ -237,39 +265,11 @@ internal class HubIdentityService : IHubIdentityService
 
     private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(HubIdentityUser user)
     {
-        if (!string.IsNullOrWhiteSpace(user.HubIdentityUserDataId))
-        {
-            var userData = await _userDataRepository.FindByIdAsync(user.HubIdentityUserDataId);
-
-            return await CreateClaimsPrincipalAsync(user, userData);
-        }
-
-        return await CreateClaimsPrincipalAsync(user, null);
-    }
-
-    private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(HubIdentityUser user, HubIdentityUserData? userData)
-    {
         List<Claim> claims = new()
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
         };
-
-        if (!string.IsNullOrWhiteSpace(user.FirstName))
-        {
-            claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName ?? string.Empty));
-        }
-
-        if (!string.IsNullOrWhiteSpace(user.LastName))
-        {
-            claims.Add(new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty));
-        }
-
-        if (userData is not null)
-        {
-            claims.Add(new Claim(HubClaimTypes.Avatar, userData.ProfileImage?.Data?.Image?.Url ?? string.Empty));
-        }
 
         // get claims that are assigned to the user...
         var userClaims = await _userManager.GetClaimsAsync(user);
@@ -290,7 +290,7 @@ internal class HubIdentityService : IHubIdentityService
             if (!string.IsNullOrWhiteSpace(role.Name))
             {
                 // add the role to the claims collection
-                claims.Add(new Claim(ClaimTypes.Role, role.Name)); 
+                claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
 
             // get all claims associated with that role
@@ -339,5 +339,55 @@ internal class HubIdentityService : IHubIdentityService
 
             throw new UnauthorizedException(sb.ToString(), "Unable to update user details.");
         }
+    }
+
+    private async Task<RefreshToken> ValidateRefreshTokenAsync(ClaimsPrincipal claimsPrincipal, string refreshToken, CancellationToken cancellationToken)
+    {
+        var storedToken = await _dbContext.RefreshTokens.FirstOrDefaultAsync(item => item.Token == refreshToken, cancellationToken)
+            ?? throw new UnauthorizedException("The token does not exist.");
+
+        if (storedToken.IsUsed)
+        {
+            throw new UnauthorizedException("The token has already been used.");
+        }
+
+        if (storedToken.IsRevoked)
+        {
+            throw new UnauthorizedException("The token has been revoked.");
+        }
+
+        var tokenID = claimsPrincipal.GetTokenID();
+        if (storedToken.JwtId != claimsPrincipal.GetTokenID())
+        {
+            throw new UnauthorizedException($"The token with ID: {tokenID}, is not valid.");
+        }
+
+        return storedToken;
+    }
+
+    private RefreshToken CreateRefreshToken(string jwtId, string userId)
+    {
+        return new RefreshToken()
+        {
+            JwtId = jwtId,
+            IsUsed = false,
+            IsRevoked = false,
+            UserId = userId,
+            AddedDate = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddMinutes(int.Parse(_configuration[HubConfigurations.API.RefreshTokenExpityInMinutes]!)),
+            Token = Generator.RandomString(CharacterCombination.NumberAndAlphabet, 65)
+        };
+    }
+
+    private string GetAudienceUrl()
+    {
+        if (_contextAccessor.HttpContext is null)
+        {
+            throw new UnauthorizedException("Invalid request host.");
+        }
+
+        string requestHost = _contextAccessor.HttpContext.Request.Host.Value;
+        string protocolScheme = _contextAccessor.HttpContext.Request.Scheme;
+        return $"{protocolScheme}{Uri.SchemeDelimiter}{requestHost}";
     }
 }
