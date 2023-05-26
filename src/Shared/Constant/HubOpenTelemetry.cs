@@ -16,7 +16,7 @@ public static class HubOpenTelemetry
     {
         string text = JsonSerializer.Serialize(request);
 
-        string pattern = @"(""(Email|Password|PasswordConfirmation)"":\s*)""[^""]*""";
+        string pattern = @"(""(Email|Password|PasswordConfirmation|Token)"":\s*)""[^""]*""";
         string replacement = "$1\"*****\"";
 
         return Regex.Replace(text, pattern, replacement);
@@ -59,8 +59,7 @@ public static class HubOpenTelemetry
                 { "exception.type", exception.GetType().FullName },
             };
 
-            using var activity = ActivitySource.StartActivity(activityName);
-            activity?.AddEvent(new ActivityEvent(eventName, tags: new ActivityTagsCollection(tagDictionary)));
+            StartActivity(activityName, eventName, tagDictionary);
         }
 
         public static void StartActivity(string activityName, string eventName, Dictionary<string, object?> tags)

@@ -1,5 +1,4 @@
 ﻿using Application.ApiClient;
-using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
