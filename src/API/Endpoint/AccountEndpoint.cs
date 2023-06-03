@@ -211,7 +211,7 @@ public static class AccountEndpoint
         }, token);
 
         return response.Succeeded
-            ? Results.File(response.Data.QrCodeImage, contentType: "image/png", fileDownloadName: "QrCodeImage")
+            ? Results.File(response.Data!.QrCodeImage, contentType: "image/png", fileDownloadName: "QrCodeImage")
             : Results.Problem(ProblemDetailFactory.CreateProblemDetails(accessor.HttpContext!, response.StatusCode, response.Message));
     }
 

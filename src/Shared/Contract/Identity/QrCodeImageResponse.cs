@@ -2,5 +2,5 @@
 
 public class QrCodeImageResponse
 {
-    public byte[] QrCodeImage { get; set; }
+    public required byte[] QrCodeImage { get; set; }
 }
