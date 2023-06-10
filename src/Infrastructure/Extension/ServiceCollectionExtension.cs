@@ -271,12 +271,19 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        services.AddHttpClient<IImageHostingClient, ImgBBClient>(client =>
+        if (environment.IsProduction())
         {
-            client.BaseAddress = new Uri(configuration[HubConfigurations.APIClient.ImgBB.BaseUrl]!);
-        });
+            services.AddHttpClient<IImageHostingClient, ImgBBClient>(client =>
+            {
+                client.BaseAddress = new Uri(configuration[HubConfigurations.APIClient.ImgBB.BaseUrl]!);
+            }); 
+        }
+        else
+        {
+            services.AddSingleton<IImageHostingClient, LocalMockClient>();
+        }
 
         return services;
     }
