@@ -34,3 +34,5 @@ Things you need to use the software and how to install them.
    ```
 
 Then navigate to [localhost:5161/swagger](http://localhost:5161/swagger)
+
+OpenTelemetry integration with Jeager UI [http://localhost:16686/](http://localhost:16686/)
