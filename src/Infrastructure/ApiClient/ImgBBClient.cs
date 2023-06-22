@@ -1,7 +1,9 @@
 ﻿using Application.ApiClient;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using OpenTelemetry.Trace;
 using Shared.Contract.ApiClient;
+using System.Diagnostics;
 
 namespace Infrastructure.ApiClient;
 
@@ -38,7 +40,16 @@ internal class ImgBBClient : IImageHostingClient
 
         var result = await _httpClient.PostAsync(endpoint, content);
 
-        result.EnsureSuccessStatusCode();
+        try
+        {
+            result.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException ex)
+        {
+            using var activity = Activity.Current ?? default;
+            activity?.RecordException(ex);
+            throw;
+        }
 
         return await result.ToResponseAsync<ImgBBUploadResponse>();
     }
