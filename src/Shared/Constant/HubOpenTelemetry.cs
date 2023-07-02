@@ -59,7 +59,9 @@ public static class HubOpenTelemetry
                 { "exception.type", exception.GetType().FullName },
             };
 
-            StartActivity(activityName, eventName, tagDictionary);
+            using var activity = ActivitySource.StartActivity(activityName);
+            activity?.SetStatus(ActivityStatusCode.Error);
+            activity?.AddEvent(new ActivityEvent(eventName, tags: new ActivityTagsCollection(tagDictionary)));
         }
 
         public static void StartActivity(string activityName, string eventName, Dictionary<string, object?> tags)
