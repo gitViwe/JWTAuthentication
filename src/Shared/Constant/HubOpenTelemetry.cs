@@ -81,10 +81,15 @@ public static class HubOpenTelemetry
 
         public static class HubUser
         {
-            public const string USER_ID = "user_id";
-            public const string JWT_ID = "jwt_id";
-            public const string JWT_ISSUER = "jwt_issuer";
-            public const string JWT_AUDIENCE = "jwt_audience";
+            public const string USER_ID = "auth_api.user_id";
+            public const string JWT_ID = "auth_api.jwt_id";
+            public const string JWT_ISSUER = "auth_api.jwt_issuer";
+            public const string JWT_AUDIENCE = "auth_api.jwt_audience";
+        }
+
+        public static class API
+        {
+            public const string PROBLEM_DETAIL = "auth_api.problem_detail";
         }
     }
 

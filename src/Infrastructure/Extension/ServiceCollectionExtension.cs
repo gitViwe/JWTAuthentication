@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Extensions.DiagnosticSources;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Diagnostics;
@@ -288,7 +289,11 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    public static void RegisterOpenTelemetry(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    public static void RegisterOpenTelemetry(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        ILoggingBuilder loggingBuilder,
+        IHostEnvironment environment)
     {
         var resource = ResourceBuilder.CreateDefault().AddService(configuration[HubConfigurations.API.ApplicationName]!);
 
@@ -332,6 +337,21 @@ internal static class ServiceCollectionExtension
                 {
                     options.AgentHost = configuration[HubConfigurations.OpenTelemetry.Jaeger.AgentHost]!;
                     options.AgentPort = int.Parse(configuration[HubConfigurations.OpenTelemetry.Jaeger.AgentPort]!);
+                });
+            }
+        });
+
+        loggingBuilder.AddOpenTelemetry(options =>
+        {
+            options.SetResourceBuilder(resource);
+            options.IncludeScopes = true;
+            options.IncludeFormattedMessage = true;
+            if (environment.IsProduction())
+            {
+                options.AddOtlpExporter(option =>
+                {
+                    option.Endpoint = new Uri(configuration[HubConfigurations.OpenTelemetry.Honeycomb.Endpoint]!);
+                    option.Headers = configuration[HubConfigurations.OpenTelemetry.Honeycomb.Headers]!;
                 });
             }
         });

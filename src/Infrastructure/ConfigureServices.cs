@@ -4,12 +4,17 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure;
 
 public static class ConfigureServices
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
+    public static IServiceCollection AddInfrastructureServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        ILoggingBuilder loggingBuilder,
+        IWebHostEnvironment environment)
     {
         services.AddApplicationServices()
             .RegisterServiceImplementation(configuration, environment)
@@ -18,7 +23,7 @@ public static class ConfigureServices
             .RegisterAuthentication(configuration, environment)
             .RegisterCors(configuration, environment)
             .RegisterHttpClient(configuration, environment)
-            .RegisterOpenTelemetry(configuration, environment);
+            .RegisterOpenTelemetry(configuration, loggingBuilder, environment);
 
         return services;
     }

@@ -1,6 +1,7 @@
 ﻿using gitViwe.ProblemDetail;
 using gitViwe.Shared;
 using Microsoft.AspNetCore.Diagnostics;
+using Shared.Constant;
 using System.Text.Json;
 
 namespace API.Extension;
@@ -21,6 +22,8 @@ internal static class ApplicationBuilderExtension
 
                 if (handlerFeature is not null)
                 {
+                    HubOpenTelemetry.AuthAPIActivitySource.StartActivity("HubExceptionHandler", "ExceptionHandled", handlerFeature.Error);
+
                     if (handlerFeature.Error is ForbiddenException forbidden)
                     {
                         response = ProblemDetailFactory.CreateProblemDetails(context, StatusCodes.Status403Forbidden, forbidden.Detail);

@@ -385,8 +385,8 @@ internal class HubIdentityService : IHubIdentityService
             throw new UnauthorizedException("Invalid request host.");
         }
 
-        string requestHost = _contextAccessor.HttpContext.Request.Host.Value;
-        string protocolScheme = _contextAccessor.HttpContext.Request.Scheme;
-        return $"{protocolScheme}{Uri.SchemeDelimiter}{requestHost}";
+        var values = _contextAccessor.HttpContext.Request.Headers.Origin;
+
+        return values.FirstOrDefault() ?? throw new UnauthorizedException("Invalid request host.");
     }
 }
