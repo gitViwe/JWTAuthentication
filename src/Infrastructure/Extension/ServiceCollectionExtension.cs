@@ -48,27 +48,10 @@ internal static class ServiceCollectionExtension
 
     private static RefreshTokenValidationParameters CreateRefreshTokenValidationParameters(IConfiguration configuration, IHostEnvironment environment)
     {
-        // get the JWT key from the APP settings file
-        var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
-
         // create the parameters used to validate refreshing tokens
-        var refreshTokenValidationParams = new TokenValidationParameters
-        {
-            ValidIssuer = configuration[HubConfigurations.API.ServerUrl],
-            ValidAudiences = new string[]
-            {
-                configuration[HubConfigurations.API.ServerUrl]!,
-                configuration[HubConfigurations.API.ClientUrl]!
-            },
-            // specify the security key used for 
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            // validates the signature of the key
-            ValidateIssuerSigningKey = true,
-            ValidateAudience = environment.IsProduction(),
-            ValidateIssuer = environment.IsProduction(),
-            // do not validate token expiry
-            ValidateLifetime = false,
-        };
+        var refreshTokenValidationParams = CreateTokenValidationParameters(configuration, environment);
+        // do not validate token expiry
+        refreshTokenValidationParams.ValidateLifetime = false;
 
         return new RefreshTokenValidationParameters(refreshTokenValidationParams);
     }
