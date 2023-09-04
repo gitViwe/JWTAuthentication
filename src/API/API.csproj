@@ -11,8 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="gitViwe.Shared.ProblemDetail.Extension" Version="1.5.1" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.8">
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

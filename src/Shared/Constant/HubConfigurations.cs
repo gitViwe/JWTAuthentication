@@ -59,8 +59,7 @@ public static class HubConfigurations
 
         public static class Jaeger
         {
-            public const string AgentHost = "OpenTelemetry:Jaeger:AgentHost";
-            public const string AgentPort = "OpenTelemetry:Jaeger:AgentPort";
+            public const string Endpoint = "OpenTelemetry:Jaeger:Endpoint";
         }
     }
 }

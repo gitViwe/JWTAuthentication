@@ -1,6 +1,4 @@
-﻿using gitViwe.Shared;
-
-namespace Shared.Contract.Identity;
+﻿namespace Shared.Contract.Identity;
 
 public class RegisterRequest
 {

@@ -14,6 +14,8 @@ public static class HubPermissions
         public const string Manage = "Permission.Profile.Manage";
     }
 
+    [DisplayName("Authentication")]
+    [Description("Authentication Permission")]
     public static class Authentication
     {
         public const string VerifiedTOTP = "Permission.Authentication.VerifiedTOTP";

@@ -24,7 +24,9 @@ namespace Infrastructure.Extension;
 
 internal static class ServiceCollectionExtension
 {
-    private static TokenValidationParameters CreateTokenValidationParameters(IConfiguration configuration, IHostEnvironment environment)
+    private static TokenValidationParameters CreateTokenValidationParameters(
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // get the JWT key from the APP settings file
         var key = Encoding.ASCII.GetBytes(configuration[HubConfigurations.API.Secret]!);
@@ -46,7 +48,9 @@ internal static class ServiceCollectionExtension
         };
     }
 
-    private static RefreshTokenValidationParameters CreateRefreshTokenValidationParameters(IConfiguration configuration, IHostEnvironment environment)
+    private static RefreshTokenValidationParameters CreateRefreshTokenValidationParameters(
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // create the parameters used to validate refreshing tokens
         var refreshTokenValidationParams = CreateTokenValidationParameters(configuration, environment);
@@ -56,7 +60,10 @@ internal static class ServiceCollectionExtension
         return new RefreshTokenValidationParameters(refreshTokenValidationParams);
     }
 
-    internal static IServiceCollection RegisterServiceImplementation(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    internal static IServiceCollection RegisterServiceImplementation(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         services.AddScoped<ISuperHeroService, SuperHeroService>();
         services.AddTransient<IHubIdentityService, HubIdentityService>();
@@ -85,7 +92,10 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterDatabaseContext(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    internal static IServiceCollection RegisterDatabaseContext(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         return services.AddDbContext<HubDbContext>(options =>
         {
@@ -118,7 +128,10 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterAuthentication(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    internal static IServiceCollection RegisterAuthentication(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // create the parameters used to validate
         var tokenValidationParams = CreateTokenValidationParameters(configuration, environment);
@@ -221,7 +234,10 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterCors(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    internal static IServiceCollection RegisterCors(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // add CORS policy https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-6.0
         services.AddCors(options =>
@@ -255,7 +271,10 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    internal static IServiceCollection RegisterHttpClient(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    internal static IServiceCollection RegisterHttpClient(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         if (environment.IsProduction())
         {
@@ -272,7 +291,7 @@ internal static class ServiceCollectionExtension
         return services;
     }
 
-    public static void RegisterOpenTelemetry(
+    internal static IServiceCollection RegisterOpenTelemetry(
         this IServiceCollection services,
         IConfiguration configuration,
         ILoggingBuilder loggingBuilder,
@@ -316,10 +335,9 @@ internal static class ServiceCollectionExtension
             }
             else
             {
-                builder.AddJaegerExporter(options =>
+                builder.AddOtlpExporter(option =>
                 {
-                    options.AgentHost = configuration[HubConfigurations.OpenTelemetry.Jaeger.AgentHost]!;
-                    options.AgentPort = int.Parse(configuration[HubConfigurations.OpenTelemetry.Jaeger.AgentPort]!);
+                    option.Endpoint = new Uri(configuration[HubConfigurations.OpenTelemetry.Jaeger.Endpoint]!);
                 });
             }
         });
@@ -338,5 +356,7 @@ internal static class ServiceCollectionExtension
                 });
             }
         });
+
+        return services;
     }
 }

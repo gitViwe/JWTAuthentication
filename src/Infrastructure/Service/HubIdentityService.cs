@@ -81,7 +81,7 @@ internal class HubIdentityService : IHubIdentityService
         }
 
         // get claims principal from user
-        var claimsPrincipal = await CreateClaimsPrincipalAsync(user);
+        var claimsPrincipal = await CreateClaimsPrincipalAsync(user, cancellationToken);
 
         if (!claimsPrincipal.HasClaim(HubClaimTypes.Permission, HubPermissions.Authentication.VerifiedTOTP))
         {
@@ -99,7 +99,7 @@ internal class HubIdentityService : IHubIdentityService
         {
             if (await _userManager.CheckPasswordAsync(existingUser, request.Password))
             {
-                var claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser);
+                var claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser, cancellationToken);
 
                 var securityToken = _tokenService.CreateToken(claimsPrincipal.Claims, GetAudienceUrl());
 
@@ -144,7 +144,7 @@ internal class HubIdentityService : IHubIdentityService
 
         if (existingUser is not null)
         {
-            claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser);
+            claimsPrincipal = await CreateClaimsPrincipalAsync(existingUser, cancellationToken);
 
             var securityToken = _tokenService.CreateToken(claimsPrincipal.Claims, GetAudienceUrl());
 
@@ -184,7 +184,7 @@ internal class HubIdentityService : IHubIdentityService
 
         await _userManager.AddClaimAsync(newUser, new Claim(HubClaimTypes.Permission, HubPermissions.Profile.Manage));
 
-        var claimsPrincipal = await CreateClaimsPrincipalAsync(newUser);
+        var claimsPrincipal = await CreateClaimsPrincipalAsync(newUser, cancellationToken);
 
         var securityToken = _tokenService.CreateToken(claimsPrincipal.Claims, GetAudienceUrl());
 
@@ -262,7 +262,7 @@ internal class HubIdentityService : IHubIdentityService
         return Response<UserDetailResponse>.Success("User details retrieved.", userDetail);
     }
 
-    private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(HubIdentityUser user)
+    private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(HubIdentityUser user, CancellationToken cancellationToken)
     {
         List<Claim> claims = new()
         {
@@ -278,7 +278,7 @@ internal class HubIdentityService : IHubIdentityService
         }
 
         // get roles that are assigned to the user
-        foreach (var role in await GetRolesAsync(user))
+        foreach (var role in await GetRolesAsync(user, cancellationToken))
         {
             if (role is null)
             {
@@ -299,28 +299,26 @@ internal class HubIdentityService : IHubIdentityService
             }
         }
 
-        async Task<IEnumerable<HubIdentityRole>> GetRolesAsync(HubIdentityUser user)
+        async Task<IEnumerable<HubIdentityRole>> GetRolesAsync(HubIdentityUser user, CancellationToken cancellationToken)
         {
             // force the enumerable to execute rather than joining
             var userRoleIds = await _dbContext.UserRoles
                                             .AsNoTracking()
                                             .Where(x => x.UserId == user.Id)
                                             .Select(x => x.RoleId)
-                                            .ToArrayAsync();
+                                            .ToArrayAsync(cancellationToken);
 
-            if (userRoleIds is null || !userRoleIds.Any())
+            if (userRoleIds is not null && userRoleIds.Any())
             {
-                return Enumerable.Empty<HubIdentityRole>();
+                var roles = await _dbContext.Roles
+                                            .AsNoTracking()
+                                            .Where(x => userRoleIds.Contains(x.Id))
+                                            .ToArrayAsync(cancellationToken);
+
+                return roles is not null && roles.Any() ? roles : Enumerable.Empty<HubIdentityRole>();
             }
 
-            var roles = await _dbContext.Roles
-                                        .AsNoTracking()
-                                        .Where(x => userRoleIds.Contains(x.Id))
-                                        .ToArrayAsync();
-
-            return roles is not null && roles.Any()
-                ? roles
-                : Enumerable.Empty<HubIdentityRole>();
+            return Enumerable.Empty<HubIdentityRole>();
         }
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims));
@@ -355,8 +353,13 @@ internal class HubIdentityService : IHubIdentityService
             throw new UnauthorizedException("The token has been revoked.");
         }
 
+        if (storedToken.ExpiryDate < DateTime.UtcNow)
+        {
+            throw new UnauthorizedException("The token has expired.");
+        }
+
         var tokenID = claimsPrincipal.GetTokenID();
-        if (storedToken.JwtId != claimsPrincipal.GetTokenID())
+        if (storedToken.JwtId != tokenID)
         {
             throw new UnauthorizedException($"The token with ID: {tokenID}, is not valid.");
         }

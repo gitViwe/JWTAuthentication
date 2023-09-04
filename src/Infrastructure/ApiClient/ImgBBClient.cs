@@ -9,13 +9,13 @@ internal class ImgBBClient : IImageHostingClient
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
-    private string UploadEndpoint { get; }
+    private readonly string _uploadEndpoint;
 
     public ImgBBClient(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _configuration = configuration;
-        UploadEndpoint = $"1/upload?key={configuration[HubConfigurations.APIClient.ImgBB.APIKey]}";
+        _uploadEndpoint = $"1/upload?key={configuration[HubConfigurations.APIClient.ImgBB.APIKey]}";
     }
 
     public Task<ImgBBUploadResponse> UploadImageAsync(IFormFile file, int? expirationInSeconds = null)
@@ -28,8 +28,8 @@ internal class ImgBBClient : IImageHostingClient
     public async Task<ImgBBUploadResponse> UploadImageAsync(HttpContent httpContent, string fileName, int? expirationInSeconds = null)
     {
         string endpoint = expirationInSeconds is not null
-            ? UploadEndpoint + $"&expiration={expirationInSeconds}"
-            : UploadEndpoint + $"&expiration={int.Parse(_configuration[HubConfigurations.APIClient.ImgBB.Expiration]!)}";
+            ? _uploadEndpoint + $"&expiration={expirationInSeconds}"
+            : _uploadEndpoint + $"&expiration={int.Parse(_configuration[HubConfigurations.APIClient.ImgBB.Expiration]!)}";
 
         var content = new MultipartFormDataContent
         {
