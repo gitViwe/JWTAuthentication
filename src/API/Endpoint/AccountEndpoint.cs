@@ -7,10 +7,10 @@ using Application.Feature.Identity.UpdateUser;
 using Application.Feature.Identity.UploadImage;
 using Application.Feature.Identity.UserDetail;
 using gitViwe.ProblemDetail;
-using gitViwe.Shared.Extension;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Contract.Identity;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 
@@ -195,7 +195,7 @@ public static class AccountEndpoint
         [FromServices] IMediator mediator,
         CancellationToken token = default)
     {
-        string tokenId = accessor.HttpContext?.User.GetTokenID()!;
+        string tokenId = accessor.HttpContext?.User.FindFirstValue(JwtRegisteredClaimNames.Jti)!;
         await mediator.Send(new LogoutCommand(tokenId), token);
         return Results.Ok();
     }

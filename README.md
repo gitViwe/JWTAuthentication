@@ -22,17 +22,16 @@ Things you need to use the software and how to install them.
    ```sh
    git clone https://github.com/gitViwe/JWTAuthentication.git
    ```
-2. Run via Docker
+2. Generate certificate. [Starting a container with https support using docker compose](https://learn.microsoft.com/en-us/aspnet/core/security/docker-compose-https?view=aspnetcore-5.0#starting-a-container-with-https-support-using-docker-compose)
+   ```
+   dotnet dev-certs https -ep .aspnet\https\jwt-authentication.pfx -p password!
+   dotnet dev-certs https --trust
+   ```
+3. Run via Docker
    ```
    docker compose up --build -d
    ```
-3. Build and run the API
-   ```
-   docker compose --file docker-compose.development.yml up -d
-   cd src/api
-   dotnet run
-   ```
+   
+Explore the Swagger API documentation: [HTTP endpoint](http://localhost:5161/swagger) or [HTTPS endpoint](https://localhost:7161/swagger)
 
-Then navigate to [localhost:5161/swagger](http://localhost:5161/swagger)
-
-OpenTelemetry integration with Jeager UI [http://localhost:16686/](http://localhost:16686/)
+OpenTelemetry integration with Jeager UI: [localhost:16686](http://localhost:16686/)

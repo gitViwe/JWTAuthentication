@@ -23,10 +23,8 @@ public static class HubConfigurations
     /// </summary>
     public static class ConnectionString
     {
-        public const string SQL = "SQL";
         public const string SQLite = "SQLite";
         public const string CosmosDb = "CosmosDb";
-        public const string PostgreSQL = "PostgreSQL";
         public const string MongoDb = "MongoDb";
     }
 
@@ -59,8 +57,7 @@ public static class HubConfigurations
 
         public static class Jaeger
         {
-            public const string AgentHost = "OpenTelemetry:Jaeger:AgentHost";
-            public const string AgentPort = "OpenTelemetry:Jaeger:AgentPort";
+            public const string Endpoint = "OpenTelemetry:Jaeger:Endpoint";
         }
     }
 }

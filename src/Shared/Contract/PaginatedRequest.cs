@@ -1,9 +1,11 @@
-﻿namespace Shared.Contract;
+﻿using gitViwe.Shared;
+
+namespace Shared.Contract;
 
 /// <summary>
 /// A unified paginated request type for the API endpoint
 /// </summary>
-public class PaginatedRequest
+public class PaginatedRequest : IPaginatedRequest
 {
     /// <summary>
     /// The current page number

@@ -1,4 +1,5 @@
 version: "3.9"
+name: jwt-authentication
 
 services:
             
@@ -7,8 +8,6 @@ services:
     hostname: mongo
     container_name: mongo
     restart: always
-    ports:
-      - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -17,6 +16,9 @@ services:
     image: jaegertracing/all-in-one
     hostname: jaeger
     container_name: jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
     ports:
-      - "6831:6831/udp" # accepts jaeger.thrift over compact thrift protocol
-      - "16686:16686" # ui
+      - "16686:16686" # jaeger ui
+      - 4317:4317 # accept OpenTelemetry Protocol (OTLP) over gRPC
+      - 4318:4318 # accept OpenTelemetry Protocol (OTLP) over HTTP
