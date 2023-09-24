@@ -140,7 +140,7 @@ internal class HubIdentityService : IHubIdentityService
         refreshToken.IsRevoked = true;
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var existingUser = await _userManager.FindByIdAsync(claimsPrincipal.GetUserId());
+        var existingUser = await _userManager.FindByIdAsync(claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
 
         if (existingUser is not null)
         {
@@ -358,7 +358,7 @@ internal class HubIdentityService : IHubIdentityService
             throw new UnauthorizedException("The token has expired.");
         }
 
-        var tokenID = claimsPrincipal.GetTokenID();
+        var tokenID = claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Jti)!;
         if (storedToken.JwtId != tokenID)
         {
             throw new UnauthorizedException($"The token with ID: {tokenID}, is not valid.");

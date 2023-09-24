@@ -99,16 +99,16 @@ internal static class ServiceCollectionExtension
     {
         return services.AddDbContext<HubDbContext>(options =>
         {
-            if (environment.IsDevelopment() || environment.IsEnvironment("Docker"))
+            if (environment.IsProduction())
+            {
+                // using an CosmosDb provider
+                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "SocialHub");
+            }
+            else
             {
                 // using an SQlite provider
                 options.UseSqlite(configuration.GetConnectionString(HubConfigurations.ConnectionString.SQLite)!,
                                     b => b.MigrationsAssembly("Infrastructure"));
-            }
-            else
-            {
-                // using an CosmosDb provider
-                options.UseCosmos(configuration.GetConnectionString(HubConfigurations.ConnectionString.CosmosDb)!, "SocialHub");
             }
         });
     }
@@ -162,15 +162,14 @@ internal static class ServiceCollectionExtension
             {
                 OnAuthenticationFailed = context =>
                 {
-                    DefaultProblemDetails response;
                     HubOpenTelemetry.AuthAPIActivitySource.StartActivity("JwtBearerEvents", "OnAuthenticationFailed", context.Exception);
 
                     // JWT token has expired
-                    response = context.Exception is SecurityTokenExpiredException
+                    var problem = context.Exception is SecurityTokenExpiredException
                         ? ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status401Unauthorized, ErrorDescription.Authorization.ExpiredToken)
                         : ProblemDetailFactory.CreateProblemDetails(context.HttpContext, StatusCodes.Status401Unauthorized);
 
-                    return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                    return context.Response.WriteAsync(JsonSerializer.Serialize(problem));
                 },
                 OnChallenge = context =>
                 {
@@ -195,7 +194,7 @@ internal static class ServiceCollectionExtension
                     Dictionary<string, object?> authTagDictionary = new()
                     {
                         { HubOpenTelemetry.TagKey.HubUser.USER_ID, context?.Principal?.FindFirstValue(ClaimTypes.NameIdentifier) },
-                        { HubOpenTelemetry.TagKey.HubUser.JWT_ID, context?.Principal?.GetTokenID() },
+                        { HubOpenTelemetry.TagKey.HubUser.JWT_ID, context?.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti) },
                         { HubOpenTelemetry.TagKey.HubUser.JWT_ISSUER, context?.Principal?.FindFirstValue(JwtRegisteredClaimNames.Iss) },
                         { HubOpenTelemetry.TagKey.HubUser.JWT_AUDIENCE, context?.Principal?.FindFirstValue(JwtRegisteredClaimNames.Aud) },
                     };
@@ -245,14 +244,7 @@ internal static class ServiceCollectionExtension
             options.AddDefaultPolicy(
                 builder =>
                 {
-                    if (environment.IsDevelopment() || environment.IsEnvironment("Docker"))
-                    {
-                        builder
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowAnyOrigin();
-                    }
-                    else
+                    if (environment.IsProduction())
                     {
                         builder
                         .AllowCredentials()
@@ -264,6 +256,13 @@ internal static class ServiceCollectionExtension
                             configuration[HubConfigurations.API.ServerUrl]!.TrimEnd('/'),
                             configuration[HubConfigurations.API.ClientUrl]!.TrimEnd('/')
                         });
+                    }
+                    else
+                    {
+                        builder
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowAnyOrigin();
                     }
                 });
         });
@@ -347,14 +346,6 @@ internal static class ServiceCollectionExtension
             options.SetResourceBuilder(resource);
             options.IncludeScopes = true;
             options.IncludeFormattedMessage = true;
-            if (environment.IsProduction())
-            {
-                options.AddOtlpExporter(option =>
-                {
-                    option.Endpoint = new Uri(configuration[HubConfigurations.OpenTelemetry.Honeycomb.Endpoint]!);
-                    option.Headers = configuration[HubConfigurations.OpenTelemetry.Honeycomb.Headers]!;
-                });
-            }
         });
 
         return services;
