@@ -11,7 +11,7 @@ internal class OpenTelemetryBehaviour<TRequest, TResponse> : IPipelineBehavior<T
         Dictionary<string, object?> requestTagDictionary = new()
         {
             { HubOpenTelemetry.TagKey.MediatR.REQUEST_TYPE, request.GetType().Name },
-            { HubOpenTelemetry.TagKey.MediatR.REQUEST_VALUE, HubOpenTelemetry.ObfuscateSensitiveData(request) },
+            { HubOpenTelemetry.TagKey.MediatR.REQUEST_VALUE, Conversion.ToObfuscatedString(request, "Email", "Password", "PasswordConfirmation", "Token") },
         };
 
         HubOpenTelemetry.MediatRActivitySource.StartActivity("PipelineBehavior", "Starting MediatR Request.", requestTagDictionary);

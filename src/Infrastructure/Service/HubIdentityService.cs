@@ -267,7 +267,7 @@ internal class HubIdentityService : IHubIdentityService
         List<Claim> claims = new()
         {
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
         };
 
         // get claims that are assigned to the user...

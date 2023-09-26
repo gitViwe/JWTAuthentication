@@ -1,27 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace Shared.Constant;
 
 public static class HubOpenTelemetry
 {
-    /// <summary>
-    /// Converts the provided value into a <see cref="string"/> where the property values for: Email, Password and PasswordConfirmation are hidden.
-    /// </summary>
-    /// <typeparam name="TValue">The type of the value to serialize.</typeparam>
-    /// <param name="request">The value to convert.</param>
-    /// <returns>A <see cref="string"/> representation of the value.</returns>
-    public static string ObfuscateSensitiveData<TValue>(TValue request)
-    {
-        string text = JsonSerializer.Serialize(request);
-
-        string pattern = @"(""(Email|Password|PasswordConfirmation|Token)"":\s*)""[^""]*""";
-        string replacement = "$1\"*****\"";
-
-        return Regex.Replace(text, pattern, replacement);
-    }
-
     public static class Source
     {
         public const string MEDIATR = "MediatR";

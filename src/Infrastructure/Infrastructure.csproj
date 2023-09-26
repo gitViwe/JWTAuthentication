@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="gitViwe.Shared.Authentication" Version="2.0.0" />
-    <PackageReference Include="gitViwe.Shared.MongoDB" Version="2.0.0" />
-    <PackageReference Include="gitViwe.Shared.ProblemDetail.Extension" Version="2.0.0" />
+    <PackageReference Include="gitViwe.Shared.Authentication" Version="2.0.1" />
+    <PackageReference Include="gitViwe.Shared.MongoDB" Version="2.0.1" />
+    <PackageReference Include="gitViwe.Shared.ProblemDetail.Extension" Version="2.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="7.0.11" />
