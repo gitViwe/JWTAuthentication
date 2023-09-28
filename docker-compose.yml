@@ -4,7 +4,7 @@ name: jwt-authentication
 services:
 
   token-api:
-    image: hubviwe/jwtauthentication.token.api:1.0.9
+    image: hubviwe/jwtauthentication.token.api:1.0.10
     container_name: token-api
     restart: on-failure
     build:
@@ -40,6 +40,6 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: true
     ports:
-      - "16686:16686" # jaeger ui
+      - 16686:16686 # jaeger ui
       - 4317:4317 # accept OpenTelemetry Protocol (OTLP) over gRPC
       - 4318:4318 # accept OpenTelemetry Protocol (OTLP) over HTTP
