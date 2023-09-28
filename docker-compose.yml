@@ -4,7 +4,7 @@ name: jwt-authentication
 services:
 
   token-api:
-    image: hubviwe/jwtauthentication.token.api:1.0.10
+    image: hubviwe/jwtauthentication.token.api:1.0.11
     container_name: token-api
     restart: on-failure
     build:
@@ -14,7 +14,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ASPNETCORE_Kestrel__Certificates__Default__Password=password!
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/jwt-authentication.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
     volumes:
       - ~/.aspnet/https:/https:ro
     ports:

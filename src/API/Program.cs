@@ -21,7 +21,10 @@ app.UseSwaggerUI(options =>
 });
 
 app.UseCors();
-app.UseHttpsRedirection();
+if (!app.Environment.IsEnvironment("Docker"))
+{
+	app.UseHttpsRedirection(); 
+}
 
 // add authentication middle-ware
 app.UseAuthentication();

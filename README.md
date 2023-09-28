@@ -24,7 +24,7 @@ Things you need to use the software and how to install them.
    ```
 2. Generate certificate. [Starting a container with https support using docker compose](https://learn.microsoft.com/en-us/aspnet/core/security/docker-compose-https?view=aspnetcore-5.0#starting-a-container-with-https-support-using-docker-compose)
    ```
-   dotnet dev-certs https -ep .aspnet\https\jwt-authentication.pfx -p password!
+   dotnet dev-certs https -ep .aspnet\https\aspnetapp.pfx -p password!
    dotnet dev-certs https --trust
    ```
 3. Run via Docker
